@@ -1,0 +1,32 @@
+# dump e file personali dell'utente: non vanno mai nel repository (BIOS, cartucce, set di caratteri, copertine, stati, sessioni, screenshot)
+*.bin
+*.rom
+*.o2
+*.vp
+*.zip
+*.o2state
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+_tosec*/
+dumps/
+# file generati
+dist/
+__pycache__/
+node_modules/
+
+# eccezione: le foto delle macchine con licenza libera (elencate in web/photos/CREDITS.json)
+!web/photos/
+!web/photos/*.webp
+
+# Cartelle private e di passaggio (da gitignore-aggiunte.txt)
+_privato/
+_import/
+_sessioni/
+_screenshot/
+DUMPS/
+
+# impostazioni locali di Claude Code (permessi di questo PC): personali, mai nel repository
+.claude/settings.local.json

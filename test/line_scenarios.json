@@ -1,0 +1,147 @@
+[
+ {
+  "name": "o2_blockout",
+  "bios": "bios/o2rom.bin",
+  "cart": "blockout.bin"
+ },
+ {
+  "name": "o2_demonattack",
+  "bios": "bios/o2rom.bin",
+  "cart": "demonattack.bin"
+ },
+ {
+  "name": "o2_killerbees",
+  "bios": "bios/o2rom.bin",
+  "cart": "killerbees.bin"
+ },
+ {
+  "name": "o2_pickaxepete",
+  "bios": "bios/o2rom.bin",
+  "cart": "pickaxepete.bin"
+ },
+ {
+  "name": "ntsc_blockout",
+  "bios": "bios/o2rom.bin",
+  "cart": "blockout.bin",
+  "std": "NTSC",
+  "seed": 11
+ },
+ {
+  "name": "o2_4in1row_linear",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2_4_in_1_row_1982_philips_eu.bin"
+ },
+ {
+  "name": "o2_musician_linear",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2app_musician_1981_philips_eu.bin"
+ },
+ {
+  "name": "o2_missao_mirror",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2_missao_impossivel_19xx_ectron_br.bin"
+ },
+ {
+  "name": "o2_armored_counter",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2_armored_encounter_sub_chase_1980_philips_eu_us.bin"
+ },
+ {
+  "name": "o2_popeye_8k",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2_popeye_1983_parker_brothers_br.bin"
+ },
+ {
+  "name": "o2_atlantis_4k",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2_atlantis_1983_imagic_eu_us.bin"
+ },
+ {
+  "name": "o2_typetell_counter4k",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2app_type_tell_1978_philips_us.bin"
+ },
+ {
+  "name": "ntsc_popeye_8k",
+  "bios": "bios/o2rom.bin",
+  "cart": "carts/o2_popeye_1983_parker_brothers_br.bin",
+  "std": "NTSC",
+  "seed": 23
+ },
+ {
+  "name": "g7400_nocart",
+  "bios": "bios/g7400.bin",
+  "cart": "",
+  "g7400": true,
+  "frames": 120
+ },
+ {
+  "name": "g7400_o2cart",
+  "bios": "bios/g7400.bin",
+  "cart": "blockout.bin",
+  "g7400": true
+ },
+ {
+  "name": "g7400_o2cart_pinB",
+  "bios": "bios/g7400.bin",
+  "cart": "killerbees.bin",
+  "g7400": true,
+  "pinB": true
+ },
+ {
+  "name": "g7400_vp_killerbees",
+  "bios": "bios/g7400.bin",
+  "cart": "carts/vp_killer_bees.bin",
+  "g7400": true,
+  "pinB": true,
+  "frames": 220
+ },
+ {
+  "name": "g7400_vp_pickaxepete",
+  "bios": "bios/g7400.bin",
+  "cart": "carts/vp_pickaxe_pete.bin",
+  "g7400": true,
+  "pinB": true,
+  "frames": 220
+ },
+ {
+  "name": "g7400_vp_demonattack",
+  "bios": "bios/g7400.bin",
+  "cart": "carts/vp_demon_attack.bin",
+  "g7400": true,
+  "pinB": true,
+  "frames": 220
+ },
+ {
+  "name": "g7400_vp_airbattle_12k",
+  "bios": "bios/g7400.bin",
+  "cart": "carts/vp_air_battle_12k.bin",
+  "g7400": true,
+  "pinB": true,
+  "frames": 220
+ },
+ {
+  "name": "g7400_vp_neutronstar_12k",
+  "bios": "bios/g7400.bin",
+  "cart": "carts/vp_neutron_star_12k.bin",
+  "g7400": true,
+  "pinB": true,
+  "frames": 220
+ },
+ {
+  "name": "g7400_vp_helicopter_16k",
+  "bios": "bios/g7400.bin",
+  "cart": "carts/vp_helicopter_rescue_16k.bin",
+  "g7400": true,
+  "pinB": true,
+  "frames": 220
+ },
+ {
+  "name": "g7400_vp_rally_16k",
+  "bios": "bios/g7400.bin",
+  "cart": "carts/vp_trans_american_rally_16k.bin",
+  "g7400": true,
+  "pinB": true,
+  "frames": 220
+ }
+]

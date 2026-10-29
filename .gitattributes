@@ -1,0 +1,23 @@
+# (c) 2026 by Agara73 - SPDX-License-Identifier: GPL-3.0-only - O2web
+# a capo LF in tutti i file di testo, su ogni sistema (run_all.sh con CRLF non gira in sh; i test controllano i byte dei sorgenti)
+* text=auto eol=lf
+
+# file non testuali: mai conversioni ne' differenze riga per riga
+# foto delle macchine (licenza libera, elencate in web/photos/CREDITS.json)
+web/photos/*.webp binary
+# altre immagini e archivi (oggi non ce ne sono nel repository: per sicurezza, se un giorno servissero)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.zip binary
+*.gz binary
+*.pdf binary
+# dump e stati: non devono MAI entrare nel repository (.gitignore), ma se succedesse git non li tocca
+*.bin binary
+*.rom binary
+*.o2 binary
+*.vp binary
+*.o2state binary

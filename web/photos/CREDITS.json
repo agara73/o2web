@@ -1,0 +1,53 @@
+{
+  "_nota": "Crediti delle foto delle macchine (web/photos). Le foto NON sono coperte dalla GPL del codice: ognuna resta con la propria licenza. verified=true solo quando autore e licenza sono stati controllati sulla pagina della fonte.",
+  "photos": {
+    "odyssey2": {
+      "file": "odyssey2.webp",
+      "sha256": "8b1cacb737492091145caae16f9484646b912b06c439a28cbee1c7b2a62bad6a",
+      "title": "Magnavox Odyssey 2 con due joystick",
+      "author": "Evan-Amos",
+      "licence": "CC-BY-SA-3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Magnavox-Odyssey-2-Console-Set.jpg",
+      "changes": "sfondo trasparente mantenuto; ridimensionata (larghezza massima 640 pixel) e convertita in WebP; la versione modificata e' distribuita con la stessa licenza (CC BY-SA 3.0)",
+      "verified": true,
+      "note": "Dati letti dall'utente sulla pagina Commons (14/10/2026): autore Evan-Amos (opera propria), CC BY-SA 3.0, creata il 17/12/2011, caricata il 18/12/2011, file Magnavox-Odyssey-2-Console-Set.jpg. Il file ricevuto e' la versione PNG con sfondo trasparente (Magnavox-Odyssey-2-Console-Set.png) della stessa fotografia: si applicano per prudenza gli stessi termini CC BY-SA 3.0."
+    },
+    "g7000": {
+      "file": "g7000.webp",
+      "sha256": "291b957e972f7c7d69810b93e2bdaa3dd6d83a4a7c325006cfc84a08151e7851",
+      "title": "Philips Videopac G7000 (1978)",
+      "author": "Jzh2074",
+      "licence": "CC-BY-SA-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Philips_Videopac_G7000_(1978)_2.jpg",
+      "changes": "ritagliata (tolto il tavolo vuoto sopra e sotto), ridimensionata (larghezza massima 640 pixel) e convertita in WebP; la versione modificata e' distribuita con la stessa licenza (CC BY-SA 4.0)",
+      "verified": true,
+      "note": "Credito incollato dall'utente dalla pagina Commons del file (14/10/2026): «Jzh2074, CC BY-SA 4.0, via Wikimedia Commons», file Philips_Videopac_G7000_(1978)_2.jpg. Sostituisce la foto precedente del G7000 (con la cartuccia Multicart e un monitor con grafica di gioco). Nell'immagine si leggono le scritte sulla macchina e sulla cartuccia."
+    },
+    "g7200": {
+      "file": "g7200.webp",
+      "sha256": "2da09edd0d13aa30efe1f810196c8fb320108606bf3673bdf63869ac51d310d6",
+      "title": "Philips Videopac G7200 (1983)",
+      "author": "Jzh2074",
+      "licence": "CC-BY-SA-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Philips_Videopac_G7200_(1983)_2.jpg",
+      "changes": "ridimensionata (larghezza massima 640 pixel) e convertita in WebP; la versione modificata e' distribuita con la stessa licenza (CC BY-SA 4.0)",
+      "verified": true,
+      "note": "Credito incollato dall'utente dalla pagina Commons del file (14/10/2026): «Jzh2074, CC BY-SA 4.0, via Wikimedia Commons», file Philips_Videopac_G7200_(1983)_2.jpg. Sostituisce la foto precedente del G7200 (RetroGathering 2010, con molti oggetti di terzi sullo sfondo). Nell'immagine si leggono le scritte sulla macchina (Videopac, Philips) e su una cartuccia."
+    },
+    "g7400": {
+      "file": "g7400.webp",
+      "sha256": "2b8cae70239eb7544178ad9fb3dedb42a130f756a3f569aec3f1a6598753fc8d",
+      "title": "Philips Videopac+ G7400 con monitor",
+      "author": "Marco van den Hout",
+      "licence": "CC-BY-SA-3.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Philips_Videopac_G7400.jpg",
+      "changes": "ridimensionata (larghezza massima 640 pixel) e convertita in WebP; la versione modificata e' distribuita con la stessa licenza (CC BY-SA 3.0)",
+      "verified": true,
+      "note": "Credito incollato dall'utente dalla pagina Commons del file (14/10/2026): «Marco van den Hout, CC BY-SA 3.0, via Wikimedia Commons», file Philips_Videopac_G7400.jpg. Nell'immagine si vedono cartelli e marchi di terzi (MO5.com, Thomson, Philips) e uno schermo di gioco."
+    }
+  }
+}

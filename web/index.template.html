@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O2web - emulatore Odyssey 2 / Videopac</title>
+<meta name="description" content="O2web: emulatore gratuito e a codice aperto di Magnavox Odyssey 2 e Philips Videopac G7000 / G7200 / G7400, nel browser, anche da disco e senza connessione.">
+<!-- (c) 2026 by Agara73 - SPDX-License-Identifier: GPL-3.0-only - O2web, emulatore Odyssey 2 / Videopac per browser. Software libero: vedi la sezione «Informazioni e licenza» e il file LICENSE. -->
+<!-- Rete (src/netfetch.js, connect-src https:, nessun http, solo lettura): all'apertura la pagina legge i due set di caratteri dal sorgente pubblico di O2EM su GitHub (si salta con «?offline» nell'indirizzo); il resto solo se l'utente preme «Scarica». BIOS, cartucce e set dell'utente restano nel browser: nessun dato dell'utente viene inviato. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src blob:; connect-src https:; form-action 'none'; base-uri 'none'">
+<style>
+:root { --bg: #14161c; --panel: #1e222b; --line: #343a48; --txt: #e6e9ef; --dim: #9aa3b5; --acc: #6cb6ff; --bad: #ff7b72; --good: #7ee787; --warn: #e3b341; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { min-height: 100vh; display: flex; flex-direction: column; }
+header, main, footer { width: 100%; max-width: 1320px; margin: 0 auto; padding: 0 16px; }
+header { padding-top: 14px; padding-bottom: 4px; }
+.hrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+#langs { display: flex; gap: 8px; flex: none; padding-top: 2px; }
+#langs button { padding: 3px; min-height: 0; line-height: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; opacity: .6; }
+#langs button svg { display: block; border-radius: 3px; box-shadow: 0 0 0 1px #0006; }
+#langs button:hover { opacity: 1; }
+#langs button[aria-pressed="true"] { opacity: 1; border-color: var(--acc); }
+h1 { font-size: 1.3rem; margin: 0 0 2px; }
+header p { margin: 0; color: var(--dim); font-size: .88rem; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding-top: 10px; padding-bottom: 12px; flex: 1; }
+@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } }
+#stage { background: #000; border: 1px solid var(--line); border-radius: 6px; position: relative; width: 100%; height: clamp(260px, calc(100vh - 300px), 880px);
+  display: flex; overflow: auto; }
+#stage:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; overflow: hidden; }
+#screen { display: block; margin: auto; flex: none; image-rendering: pixelated; outline: none; background: #000; }
+#screen.smooth { image-rendering: auto; }
+#splash { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px;
+  background: radial-gradient(ellipse at 50% 40%, #243049 0%, #0c0f16 70%); }
+#splash::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, .28) 0, rgba(0, 0, 0, .28) 1px, transparent 1px, transparent 4px); }
+#splash > * { position: relative; }
+#splash .mark { width: clamp(72px, 14vw, 120px); height: auto; color: var(--acc); filter: drop-shadow(0 0 10px #2c6fb0); }
+#splash .logo { font-size: clamp(2rem, 7vw, 3.6rem); font-weight: 800; letter-spacing: .08em; color: var(--acc); text-shadow: 0 0 18px #2c6fb0; margin-top: 6px; }
+#splash .sub { color: var(--dim); margin-top: 6px; max-width: 34em; }
+#splash .machine { width: clamp(150px, 26vw, 250px); }
+#splash .machine svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 10px #2c6fb066); }
+#splash ul.needs { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; width: min(30em, 100%); text-align: left; }
+#splash ul.needs li { display: flex; gap: 10px; align-items: baseline; background: rgba(20, 22, 28, .72); border: 1px solid var(--line); border-radius: 5px; padding: 5px 10px; font-size: .9rem; }
+#splash ul.needs li.miss { border-color: var(--warn); }
+#splash ul.needs li.ok { border-color: #2f6b3a; }
+#splash ul.needs b { min-width: 9.5em; font-weight: 600; }
+#splash ul.needs span { color: var(--dim); min-width: 0; word-break: break-word; }
+.badge { font-size: .72rem; font-weight: 700; letter-spacing: .04em; border-radius: 3px; padding: 0 6px; flex: none; border: 1px solid currentColor; }
+.badge.ok { color: var(--good); } .badge.miss { color: var(--warn); }
+.needs-box { border: 1px solid var(--line); border-radius: 5px; background: #181c25; padding: 2px 10px 8px; margin-top: 4px; }
+.need { padding-top: 6px; }
+.need .hd { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.need.miss { border-left: 3px solid var(--warn); padding-left: 8px; margin-left: -10px; }
+.need .detail { color: var(--dim); font-size: .8rem; word-break: break-word; margin-top: 2px; }
+.need.miss .detail { color: var(--warn); }
+figure.machine { margin: 0; text-align: center; }
+figure.machine img, #splash .machine img { display: block; width: min(100%, 300px); height: auto; margin: 0 auto; border-radius: 6px; }
+figure.machine svg { display: block; width: min(100%, 300px); height: auto; margin: 0 auto; }
+.sl { display: grid; grid-template-columns: minmax(0, 1fr) 2.6em; gap: 0 8px; align-items: center; margin-top: 8px; }
+.sl label { grid-column: 1 / -1; font-size: .85rem; color: var(--dim); }
+.sl input[type=range] { width: 100%; }
+.sl output { text-align: right; font-size: .8rem; font-variant-numeric: tabular-nums; }
+pre.gpl { max-height: 320px; overflow: auto; white-space: pre-wrap; font: .72rem/1.35 ui-monospace, Menlo, Consolas, monospace; background: #181c25; border: 1px solid var(--line); border-radius: 5px; padding: 8px; margin: 8px 0 0; }
+.about p { margin: 8px 0 0; font-size: .84rem; }
+.about a { color: var(--acc); }
+#toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: rgba(20, 22, 28, .88); border: 1px solid var(--line); border-radius: 5px;
+  padding: 4px 12px; font-size: .9rem; pointer-events: none; opacity: 0; transition: opacity .25s; }
+#toast.on { opacity: 1; }
+#panel { align-self: start; display: flex; flex-direction: column; gap: 8px; }
+details { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 0 12px; }
+details[open] { padding-bottom: 12px; }
+section.static { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 0 12px 12px; }
+section.static h2 { margin: 0; padding: 9px 0; font-weight: 600; color: var(--acc); font-size: .95rem; }
+section.static p { margin: 0 0 8px; }
+a.don-link { display: inline-block; padding: 8px 14px; border-radius: 6px; font-weight: 600; text-decoration: none; color: #1b1300; background: #f0b429; border: 1px solid #b88710; }
+a.don-link:hover { filter: brightness(1.08); }
+summary { cursor: pointer; padding: 9px 0; font-weight: 600; color: var(--acc); font-size: .95rem; }
+label.f { display: block; margin: 8px 0 2px; font-size: .85rem; color: var(--dim); }
+input[type=file] { width: 100%; font-size: .85rem; color: var(--txt); }
+input[type=search], select, button { font: inherit; color: var(--txt); background: #2a3040; border: 1px solid var(--line); border-radius: 5px; padding: 6px 10px; }
+input[type=search] { width: 100%; }
+select { max-width: 100%; }
+button { cursor: pointer; } button:hover:not(:disabled) { border-color: var(--acc); } button:disabled { opacity: .45; cursor: default; }
+button.small { padding: 2px 8px; font-size: .8rem; }
+:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+.dim { color: var(--dim); font-size: .82rem; }
+.drop { border: 1px dashed var(--line); border-radius: 5px; padding: 8px; margin-top: 6px; text-align: center; color: var(--dim); font-size: .85rem; }
+.drop.over { border-color: var(--acc); color: var(--txt); }
+#games { list-style: none; margin: 8px 0 0; padding: 0; max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 5px; background: #181c25; }
+#games li { display: flex; gap: 4px; align-items: stretch; border-bottom: 1px solid #232836; }
+#games li:last-child { border-bottom: 0; }
+#games li.cur { background: #1f2b44; }
+#games button.g { flex: 1; text-align: left; background: transparent; border: 0; border-radius: 0; padding: 5px 8px; min-width: 0; }
+#games button.g:hover { background: #232b3d; }
+#games .t { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#games .m { display: block; color: var(--dim); font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#games .w { color: var(--warn); }
+#games button.s { background: transparent; border: 0; border-radius: 0; padding: 0 8px; color: var(--dim); }
+#games button.s.mem { color: var(--good); }
+#games canvas.pv { width: 72px; height: 49px; align-self: center; margin-left: 6px; border-radius: 2px; background: #0b0d12; flex: none; }
+#games .sg { color: var(--acc); font-weight: 600; }
+#games .n { color: var(--dim); font-size: .72rem; border: 1px solid var(--line); border-radius: 9px; padding: 0 5px; margin-left: 6px; }
+#games .c { display: block; color: var(--dim); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#games .c .pl { color: var(--acc); }
+#games .cf { display: block; color: var(--warn); font-size: .72rem; }
+#games li.hd { list-style: none; position: sticky; top: 0; background: var(--panel); color: var(--dim); font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 6px 4px 2px; border-bottom: 1px solid var(--line); }
+#games li.hd .n { margin-left: 6px; font-weight: 400; }
+#games .a { display: block; color: var(--dim); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#b-merge[aria-pressed=true], #b-previews[aria-pressed=true], #b-auto[aria-pressed=true] { border-color: var(--acc); color: var(--acc); }
+#games li img.th { width: 34px; height: 44px; object-fit: cover; align-self: center; margin-left: 6px; border-radius: 2px; background: #0b0d12; flex: none; }
+figure.cover { margin: 8px 0 0; text-align: center; }
+figure.cover img { display: block; max-width: min(100%, 220px); max-height: 280px; margin: 0 auto; border-radius: 4px; border: 1px solid var(--line); background: #0b0d12; }
+figure.cover figcaption { font-size: .78rem; color: var(--dim); margin-top: 2px; word-break: break-word; }
+progress { width: 100%; height: 10px; margin-top: 8px; accent-color: var(--acc); }
+progress[hidden] { display: none; }
+.sep { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px; }
+button.help { flex: none; width: 1.6em; height: 1.6em; padding: 0; border-radius: 50%; font-size: .78rem; font-weight: 700; line-height: 1; color: var(--acc); background: transparent; border: 1px solid var(--acc);
+  display: inline-flex; align-items: center; justify-content: center; }
+button.help[aria-expanded=true] { background: var(--acc); color: #000; }
+.helpbox { margin: 6px 0;  padding: 6px 10px; border-left: 3px solid var(--acc); background: #181c25; border-radius: 3px; font-size: .82rem; text-align: left; font-weight: 400; color: var(--txt); }
+.helpbox[hidden] { display: none; }
+.helpbox p { margin: 6px 0 0; font-size: inherit; }
+.helpbox p:first-child { margin-top: 0; }
+.fh { display: flex; align-items: center; gap: 6px; margin: 8px 0 2px; }
+.fh label.f { margin: 0; }
+.hl { display: flex; justify-content: flex-end; margin-top: 0; }
+.drop button.help { margin-left: 4px; vertical-align: middle; }
+input[type=text] { width: 100%; font: inherit; color: var(--txt); background: #2a3040; border: 1px solid var(--line); border-radius: 5px; padding: 6px 10px; }
+#log { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.msg { border-left: 3px solid var(--acc); background: #181c25; padding: 5px 8px; border-radius: 3px; font-size: .85rem; display: flex; gap: 8px; }
+.msg span { flex: 1; word-break: break-word; }
+.msg button { padding: 0 6px; background: transparent; border: 0; color: var(--dim); }
+.msg.bad { border-color: var(--bad); } .msg.warn { border-color: var(--warn); } .msg.good { border-color: var(--good); }
+.privacy { border: 1px solid var(--warn); border-radius: 5px; padding: 6px 8px; margin-top: 8px; font-size: .82rem; color: var(--warn); }
+table.keys { border-collapse: collapse; width: 100%; font-size: .84rem; margin-top: 6px; }
+table.keys th, table.keys td { border-bottom: 1px solid #262c3a; padding: 3px 4px; text-align: left; vertical-align: middle; }
+table.keys td.k { color: var(--dim); }
+table.keys button.cap.on { border-color: var(--warn); color: var(--warn); }
+kbd { background: #2a3040; border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; font-size: .78rem; color: var(--txt); }
+#vkeys { margin-top: 8px; display: none; flex-direction: column; gap: 4px; align-items: center; user-select: none; touch-action: none; }
+#vkeys.on { display: flex; }
+#vkeys .vr { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+#vkeys button { min-width: 34px; padding: 6px 4px; }
+#vkeys button.dn { background: var(--acc); color: #000; }
+#stats { font-size: .78rem; color: var(--dim); margin-top: 6px; font-variant-numeric: tabular-nums; min-height: 1.2em; }
+#info { font-size: .8rem; color: var(--dim); margin-top: 6px; word-break: break-word; }
+#d-chars canvas { image-rendering: pixelated; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; background: #161b26; display: block; }
+#d-chars canvas:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+#d-chars .ce-main { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; margin-top: 8px; }
+#d-chars .ce-main > div { min-width: 0; }
+#d-chars .row { margin-top: 6px; }
+#d-chars button[aria-pressed=true] { border-color: var(--acc); color: var(--acc); }
+#d-chars textarea { width: 100%; font: .8rem/1.15 ui-monospace, Menlo, Consolas, monospace; color: var(--txt); background: #2a3040; border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; box-sizing: border-box; }
+#d-chars ol, #d-chars ul { margin: 4px 0 0; padding-left: 1.2em; font-size: .82rem; }
+#d-chars li { margin-top: 3px; }
+#d-chars code { background: #2a3040; border-radius: 3px; padding: 0 3px; font-size: .78rem; }
+#d-chars p { margin: 6px 0 0; font-size: .84rem; }
+footer { padding-top: 8px; padding-bottom: 14px; color: var(--dim); font-size: .78rem; }
+/* piastra dei comandi: tasti come quelli del Videopac G7000 (membrana scura, tasti chiari, RESET rosso con il triangolo) */
+#plate { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 18px; margin-top: 8px; padding: 10px 14px 12px; border-radius: 8px; border: 1px solid #2c2e38;
+  background: linear-gradient(#212229, #17181d); box-shadow: inset 0 1px 0 #ffffff12, 0 2px 0 #00000066; }
+#plate .grow { flex: 1; }
+.pgrp { display: flex; flex-direction: column; gap: 5px; }
+.leg { display: flex; align-items: center; gap: 6px; font-size: .62rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #8d909c; white-space: nowrap; }
+.pgrp > .leg::after { content: ""; flex: 1; height: 1px; background: #8d909c66; }
+.pgrp.reset > .leg { color: #e0585e; } .pgrp.reset > .leg::after { background: #e0585e77; }
+.pk { display: flex; gap: 6px; }
+button.key { min-width: 66px; min-height: 40px; padding: 4px 12px 5px; border-radius: 6px; font-size: .82rem; font-weight: 600; line-height: 1.15; text-align: center; color: #25262b;
+  background: linear-gradient(#efece3, #cdcac0); border: 1px solid #8a8982; border-bottom-width: 3px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; }
+button.key:hover:not(:disabled) { border-color: var(--acc); box-shadow: 0 0 0 2px #6cb6ff55; }
+button.key:active:not(:disabled) { transform: translateY(1px); border-bottom-width: 2px; }
+button.key:disabled { opacity: .4; }
+button.key[aria-pressed=true] { background: linear-gradient(#cfe6ff, #9cc4ee); border-color: #3b6ea5; }
+button.key .ks { font-size: .6rem; font-weight: 500; letter-spacing: .08em; opacity: .62; }
+button.key.red { color: #fff; background: linear-gradient(#d6454b, #a62329); border-color: #6c1317; flex-direction: row; gap: 7px; }
+button.key.red .ks { color: #fff; }
+button.key .tri { width: 12px; height: 11px; background: #fff; clip-path: polygon(50% 0, 100% 100%, 0 100%); flex: none; }
+button.key .kt { display: flex; flex-direction: column; align-items: center; }
+/* schermo e suono: fascia sotto i tasti */
+#screenopts { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 16px; margin-top: 8px; padding: 8px 14px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+#screenopts > .leg { flex: 1 0 100%; color: var(--dim); }
+#screenopts > .leg::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.opt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.opt > label, .opt > .ol { font-size: .74rem; color: var(--dim); }
+.opt.chk { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 5px; }
+.opt.chk label { font-size: .84rem; color: var(--txt); }
+.opt input[type=range] { width: 120px; }
+.opt select { padding: 4px 8px; font-size: .85rem; }
+#pinb-row { flex: 1 0 100%; }
+#pinb-row[hidden] { display: none; }
+#pinb-row .opt { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 6px; }
+/* macchina e giochi */
+.mrow { display: flex; gap: 12px; align-items: flex-start; margin-top: 6px; }
+.mrow figure.machine { flex: 0 0 128px; }
+.mrow .mcol { flex: 1; min-width: 0; }
+.mrow .mcol select { width: 100%; }
+#machine-cap { font-size: .72rem; color: var(--dim); margin-top: 4px; word-break: break-word; }
+details.adv { background: transparent; border: 0; padding: 0; margin-top: 4px; }
+details.adv[open] { padding-bottom: 4px; }
+details.adv > summary { font-size: .82rem; font-weight: 500; color: var(--dim); padding: 5px 0; }
+details.adv > summary:hover { color: var(--acc); }
+details.adv .needs-box { margin-top: 2px; }
+ul.chips { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; }
+ul.chips li { display: inline-flex; align-items: center; gap: 6px; }
+ul.chips li.miss .txt { color: var(--warn); }
+@media (max-width: 520px) { .mrow figure.machine { flex-basis: 96px; } #plate { gap: 10px 12px; padding: 8px 10px 10px; } button.key { min-width: 58px; padding: 4px 8px 5px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div>
+      <h1>O2web</h1>
+      <p>Emulatore di Magnavox Odyssey&sup2; e Philips Videopac G7000 / G7200 / G7400 &mdash; gira nel browser, anche da disco e senza connessione.</p>
+    </div>
+    <nav id="langs" data-dyn aria-label="Language / Lingua">
+      <button type="button" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="true"><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="13"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button>
+      <button type="button" data-lang="it" lang="it" title="Italiano" aria-label="Italiano" aria-pressed="false"><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false"><rect width="20" height="40" fill="#009246"/><rect x="20" width="20" height="40" fill="#fff"/><rect x="40" width="20" height="40" fill="#ce2b37"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main>
+  <section>
+    <div id="stage">
+      <canvas id="screen" width="360" height="243" tabindex="0" aria-label="Schermo della console"></canvas>
+      <div id="splash">
+        <div class="machine" id="splash-machine" style="display:none"></div>
+        <svg class="mark" id="splash-mark" viewBox="0 0 120 90" aria-hidden="true" focusable="false">
+          <rect x="6" y="6" width="108" height="66" rx="14" fill="none" stroke="currentColor" stroke-width="4"/>
+          <g stroke="currentColor" stroke-width="2" opacity=".5"><path d="M18 22h84M18 30h84M18 38h84M18 46h84M18 54h84M18 62h84"/></g>
+          <rect x="30" y="32" width="10" height="10" fill="currentColor"/><rect x="78" y="44" width="10" height="10" fill="currentColor"/><rect x="52" y="30" width="6" height="22" fill="currentColor"/>
+          <path d="M40 84h40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <div class="logo">O2web</div>
+        <div class="sub">Aggiungi il BIOS e i giochi con &laquo;Aggiungi file&hellip;&raquo; (pannello &laquo;Macchina e giochi&raquo;): restano nel tuo browser.</div>
+        <ul class="needs" id="splash-needs">
+          <li id="s-bios" data-dyn-attr><span class="badge" data-dyn></span><b>BIOS</b><span data-dyn></span></li>
+          <li id="s-char" data-dyn-attr><span class="badge" data-dyn></span><b>Set di caratteri</b><span data-dyn></span></li>
+          <li id="s-games" data-dyn-attr><span class="badge" data-dyn></span><b>Giochi</b><span data-dyn></span></li>
+        </ul>
+      </div>
+      <div id="toast" role="status"></div>
+    </div>
+    <div id="plate" role="group" aria-label="Comandi della console">
+      <div class="pgrp"><span class="leg">Gioco</span><div class="pk">
+        <button class="key" id="b-start" disabled title="Avvio a freddo del gioco in uso"><span class="kl" data-dyn>Avvia</span></button>
+        <button class="key" id="b-pause" disabled title="Pausa (F8)"><span class="kl" data-dyn>Pausa</span><span class="ks">F8</span></button>
+      </div></div>
+      <div class="pgrp"><span class="leg">Stato</span><div class="pk">
+        <button class="key" id="b-memo" disabled title="Memorizza lo stato del gioco in uso nella sessione"><span class="kl">Memorizza</span></button>
+      </div></div>
+      <div class="pgrp"><span class="leg">Giocatori</span><div class="pk">
+        <button type="button" class="key" id="b-swap" aria-pressed="false" title="Scambia i comandi dei giocatori 1 e 2: i tasti e il gamepad del giocatore 1 muovono il joystick 2, e viceversa. Utile nei giochi a turni giocati da soli."><span class="kl">Scambia comandi 1-2</span><span class="ks" data-dyn>normali</span></button>
+      </div></div>
+      <div class="pgrp"><span class="leg">Schermo</span><div class="pk">
+        <button class="key" id="b-full" title="Schermo intero (F10)"><span class="kl">Schermo intero</span><span class="ks">F10</span></button>
+        <button type="button" class="key" id="b-crt" title="Filtri da tubo catodico: passa all&rsquo;insieme successivo (nessun filtro, leggero, anni &rsquo;80, poi il tuo personalizzato se ne hai fatto uno). Le regolazioni una per una sono nel pannello &laquo;Aspetto&raquo;."><span class="kl">Filtri CRT</span><span class="ks" data-dyn>spenti</span></button>
+      </div></div>
+      <span class="grow"></span>
+      <div class="pgrp reset"><span class="leg">Reset</span><div class="pk">
+        <button class="key red" id="b-reset" disabled title="Tasto RESET della console (F9): la cartuccia resta, si torna al menu del BIOS"><span class="tri" aria-hidden="true"></span><span class="kt"><span class="kl">Reset console</span><span class="ks">F9</span></span></button>
+      </div></div>
+    </div>
+    <div id="screenopts" role="group" aria-label="Schermo e suono">
+      <span class="leg">Schermo e suono</span>
+      <div class="opt"><label for="volume">Volume</label><input type="range" id="volume" min="0" max="100" value="80" aria-label="Volume"></div>
+      <div class="opt chk"><input type="checkbox" id="muted"><label for="muted">Muto</label></div>
+      <div class="opt"><label for="scale">Ingrandimento</label>
+        <select id="scale"><option value="0">Adatta alla finestra</option><option value="1">1&times;</option><option value="2">2&times;</option><option value="3">3&times;</option><option value="4">4&times;</option><option value="5">5&times;</option><option value="6">6&times;</option></select></div>
+      <div class="opt"><label for="aspect">Proporzioni dei punti</label>
+        <select id="aspect"><option value="tv">Schermo 4:3 (come un televisore)</option><option value="square">Punti quadrati (360 &times; 243)</option></select></div>
+      <div class="opt chk"><input type="checkbox" id="integer"><label for="integer">Solo multipli interi (pixel tutti uguali)</label></div>
+      <div id="pinb-row" hidden>
+        <div class="opt"><label for="pinb">Pin B della cartuccia (solo Videopac+ G7400)</label>
+          <span style="display:inline-flex;gap:6px;align-items:center"><select id="pinb" aria-describedby="h-pinb"><option value="auto">Automatico (alto per i giochi Videopac+ e le cartucce da 12 / 16 KB)</option><option value="low">Basso</option><option value="high">Alto</option></select>
+          <button type="button" class="help" aria-expanded="false" aria-controls="h-pinb" aria-label="Aiuto: pin B della cartuccia" title="Aiuto">?</button></span></div>
+        <div class="helpbox" id="h-pinb" hidden>
+          <p>Non &egrave; nel dump della cartuccia. Con il pin alto il testo dell&rsquo;EF9341 compare solo dentro la sua area; cambiandolo la console riparte a freddo.</p>
+        </div>
+      </div>
+    </div>
+    <div id="stats" aria-live="off"></div>
+    <div id="log" role="status" aria-live="polite"></div>
+    <div id="vkeys" aria-label="Tastiera a schermo"></div>
+  </section>
+  <aside id="panel">
+    <details open id="d-games">
+      <summary>Macchina e giochi</summary>
+      <div class="mrow">
+        <figure class="machine" id="machine" style="display:none"><div id="machine-img"></div></figure>
+        <div class="mcol">
+          <div class="fh" style="margin-top:0"><label class="f" for="machine-sel">Macchina</label>
+            <button type="button" class="help" aria-expanded="false" aria-controls="h-machine" aria-label="Aiuto: macchina" title="Aiuto">?</button></div>
+          <select id="machine-sel" data-dyn disabled aria-describedby="bios-info"><option>(nessun BIOS)</option></select>
+          <div class="dim" id="bios-info" data-dyn style="margin-top:4px"></div>
+          <button type="button" id="b-auto" aria-pressed="true" style="margin-top:6px" title="Un gioco segnato solo Videopac+ nella lista delle cartucce avvia da solo il Videopac+ G7400 (se c&rsquo;&egrave; il suo BIOS); uno normale riporta alla macchina di prima. Se scegli la macchina a mano, non cambia pi&ugrave; niente finch&eacute; non riaccendi questo interruttore.">Cambio macchina automatico</button>
+        </div>
+      </div>
+      <div class="dim" id="machine-cap" style="display:none"></div>
+      <div class="helpbox" id="h-machine" hidden>
+        <p>Serve un BIOS Odyssey&sup2; / Videopac G7000 da 1024 byte (anche dentro un archivio .zip); per C52, Jopac e G7400 il loro BIOS. Aggiungilo con &laquo;Aggiungi file&hellip;&raquo; qui sotto o trascinalo sulla pagina: resta nel browser e non viene mai inviato in rete. Se ne aggiungi pi&ugrave; d&rsquo;uno per la stessa macchina, scegli quale usare in &laquo;Avanzate&raquo;.</p>
+        <p>La macchina sceglie da sola BIOS, standard video e schermo: Odyssey&sup2; = BIOS G7000 con NTSC; Videopac G7000 = lo stesso BIOS con PAL; Videopac G7200 = come il G7000, con lo schermo in bianco e nero (cambiano solo i colori mostrati, non l&rsquo;emulazione; i livelli di grigio sono la luminanza standard, da verificare sulla macchina vera); C52, Jopac e G7400 = il loro BIOS.</p>
+        <p>Le macchine di cui manca il BIOS sono in grigio: aggiungilo con &laquo;Aggiungi file&hellip;&raquo;. Se cambiano BIOS o standard, il gioco in uso riparte a freddo e la partita si memorizza; tra G7000 e G7200 non riparte niente.</p>
+        <p>La foto ha una licenza libera (crediti in &laquo;Informazioni e licenza&raquo;); dove non c&rsquo;&egrave; una foto, il disegno &egrave; stilizzato e originale.</p>
+      </div>
+      <details class="adv" id="d-adv">
+        <summary>Avanzate: standard video e BIOS</summary>
+        <label class="f" for="std">Standard video</label>
+        <select id="std"><option value="PAL">PAL 50 Hz (Videopac)</option><option value="NTSC">NTSC 60 Hz (Odyssey&sup2;)</option></select>
+        <div id="adv-bios" hidden>
+          <label class="f" for="bios-sel">BIOS per questa macchina</label>
+          <select id="bios-sel" data-dyn></select>
+        </div>
+      </details>
+      <div class="fh"><label class="f" for="q">Cerca nell&rsquo;elenco dei giochi</label>
+        <button type="button" class="help" aria-expanded="false" aria-controls="h-games" aria-label="Aiuto: giochi" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-games" hidden>
+        <p>I giochi sono file .bin (anche dentro un archivio compresso .zip, anche con altri .zip dentro) che porti tu con &laquo;Aggiungi file&hellip;&raquo;: restano nel browser.</p>
+        <p>Un clic su un gioco lo avvia a freddo; &#9679; riprende la partita memorizzata; &times; lo toglie dall&rsquo;elenco.</p>
+        <p>Ogni gioco si mostra con la sua sigla numerata (vp_13 = Videopac n. 13, o2_45 = Odyssey&sup2; AJ9445, br_ = Brasile) e il suo nome; sotto, gli altri nomi con cui l&rsquo;hai trovato. La sigla sta nel nome del file oppure si riconosce dal contenuto. Se aggiungi anche un elenco di nomi (per esempio Gamelist777.txt) i nomi vengono da l&igrave;; altrimenti da una tabella incorporata.</p>
+        <p>&laquo;Unisci giochi duplicati&raquo;: i file con lo stesso identico contenuto (anche con nomi diversi, da raccolte diverse) diventano una voce sola; versioni diverse dello stesso gioco restano separate. &Egrave; solo il modo di mostrarli: i file non cambiano. &laquo;Anteprime&raquo;: una piccola schermata del gioco, ottenuta facendolo girare per qualche secondo nel tuo browser (solo per le righe che vedi); se il gioco resta fermo su uno schermo quasi vuoto, prova a premere in sequenza i tasti della console (pu&ograve; richiedere qualche secondo in più); resta in memoria e non viene salvata da nessuna parte.</p>
+      </div>
+      <input type="search" id="q" placeholder="titolo, anno, editore, paese&hellip;" autocomplete="off">
+      <label class="f" for="folder">Cartella</label>
+      <div class="row"><label class="f" for="order-sel">Ordina per</label><select id="order-sel"><option value="device">Dispositivo e numero di cassetta</option><option value="name">Nome del gioco</option></select></div>
+      <select id="folder" data-dyn><option value="*">Tutte le cartelle</option></select>
+      <div class="dim" id="count" data-dyn style="margin-top:6px"></div>
+      <figure class="cover" id="cover" style="display:none"><img id="cover-img" alt=""><figcaption id="cover-cap"></figcaption></figure>
+      <ul id="games" data-dyn></ul>
+      <div class="row"><button id="b-clearlib" disabled>Svuota elenco</button><button type="button" id="b-merge" aria-pressed="true" title="Mostra una voce sola per i file con lo stesso contenuto">Unisci giochi duplicati</button><button type="button" id="b-previews" aria-pressed="true" title="Piccola anteprima di una schermata di gioco">Anteprime</button><span class="dim" id="clear-note"></span></div>
+      <div class="drop" id="drop">Trascina qui i file, oppure
+        <input type="file" id="f-files" multiple hidden><button type="button" id="b-add">Aggiungi file&hellip;</button><button type="button" class="help" aria-expanded="false" aria-controls="h-drop" aria-label="Aiuto: che file si possono aggiungere" title="Aiuto">?</button>
+        <div class="helpbox" id="h-drop" hidden>
+          <p>BIOS, set di caratteri e cartucce (.bin), archivi compressi (.zip, anche con altri .zip dentro), stati (.o2state) e sessioni.</p>
+          <p>&Egrave; l&rsquo;unico punto di caricamento: riconosce da solo il tipo di ogni file (anche immagini delle copertine e sorgenti C dei set di caratteri). Porta solo file che hai il diritto di usare: restano nel tuo browser.</p>
+        </div>
+      </div>
+      <ul class="chips" id="chips" aria-label="Stato dei file necessari">
+        <li id="c-bios" data-dyn-attr><span class="badge" data-dyn></span><span class="txt" data-dyn>BIOS</span></li>
+        <li id="c-char" data-dyn-attr><span class="badge" data-dyn></span><span class="txt" data-dyn>Caratteri</span></li>
+        <li id="c-games" data-dyn-attr><span class="badge" data-dyn></span><span class="txt" data-dyn>Giochi</span></li>
+      </ul>
+      <div class="need miss" id="chess-warn" role="status" hidden><div class="detail" id="chess-warn-text" data-dyn></div></div>
+      <details class="adv" id="d-sets">
+        <summary>Set di caratteri e modulo scacchi</summary>
+        <div class="needs-box" id="needs-box">
+        <div class="need" id="n-char"><div class="hd"><span class="badge" data-dyn></span><b>Set di caratteri del chip video</b>
+            <button type="button" class="help" aria-expanded="false" aria-controls="h-char" aria-label="Aiuto: set di caratteri del chip video" title="Aiuto">?</button></div><div class="detail" id="char-info" data-dyn></div>
+          <div class="row"><button type="button" id="b-char-clear" disabled>Usa quello di ripiego</button></div>
+          <div class="helpbox" id="h-char" hidden>
+            <p>512 byte che stanno nel chip video, non nel BIOS. Si scarica da solo all&rsquo;apertura; si riconosce anche se lo aggiungi (in uno zip, insieme agli altri file) e vale quello che metti tu. Come ricavarlo: vedi il README.</p>
+            <p>Il set GPL incluso (disegnato da zero) va bene per il menu e per molti giochi, ma i simboli speciali di alcuni giochi non coincidono con l&rsquo;originale. Puoi ritoccarlo nell&rsquo;Editor dei caratteri o aggiungere il file originale (pulsanti &laquo;Scarica &hellip; da GitHub&raquo; o &laquo;Aggiungi file&raquo;).</p>
+            <p>&laquo;Usa quello di ripiego&raquo; torna al set GPL incluso e fa ripartire la console a freddo (la partita resta memorizzata); nell&rsquo;Editor dei caratteri le modifiche sono immediate.</p>
+          </div></div>
+        <div class="need" id="n-efchar"><div class="hd"><span class="badge" data-dyn></span><b>Caratteri EF9341 (G7400)</b>
+            <button type="button" class="help" aria-expanded="false" aria-controls="h-efchar" aria-label="Aiuto: set di caratteri dell&rsquo;EF9341" title="Aiuto">?</button></div><div class="detail" id="efchar-info" data-dyn></div>
+          <div class="row"><button type="button" id="b-efchar-clear" disabled>Usa quello di ripiego</button></div>
+          <div class="helpbox" id="h-efchar" hidden>
+            <p>2560 byte (256 voci da 10 byte): la ROM dei caratteri del chip EF9341, non &egrave; nel BIOS. Serve solo con il BIOS Videopac+ G7400 / Jopac. Si scarica da solo all&rsquo;apertura; si riconosce anche dalla dimensione se lo aggiungi insieme agli altri file.</p>
+            <p>Con gli altri BIOS non serve. &laquo;Usa quello di ripiego&raquo; torna alla ROM GPL inclusa e fa ripartire la console G7400 a freddo (la partita resta memorizzata).</p>
+          </div></div>
+        <div class="need" id="n-chess"><div class="hd"><span class="badge" data-dyn></span><b>ROM dello Z80 del modulo scacchi (C7010)</b>
+            <button type="button" class="help" aria-expanded="false" aria-controls="h-chess" aria-label="Aiuto: modulo scacchi C7010" title="Aiuto">?</button></div><div class="detail" id="chess-info" data-dyn></div>
+          <div class="row"><button type="button" id="b-chess-clear" disabled>Togli la ROM dello Z80</button></div>
+          <div class="helpbox" id="h-chess" hidden>
+            <p>Il modulo scacchi Philips C7010 (1982, solo Europa) &egrave; un secondo computer dentro la cartuccia: un Z80 con una ROM da 8 KB che parla con la console. Servono quindi <b>due file</b>: la cartuccia da 2 KB (si aggiunge come un gioco) e la ROM da 8 KB dello Z80 (di solito <code>z80_c7010.bin</code>). Si riconoscono dalla dimensione e dal CRC-32, non dal nome; anche dentro uno zip.</p>
+            <p>Senza la ROM da 8 KB si vede la scacchiera ma il modulo non risponde. Con il BIOS G7000 / G7200 (non con il G7400). Quando aggiungi o togli la ROM la console riparte a freddo.</p>
+            <p>Usa la macchina <b>Videopac G7000 / G7200 (PAL)</b>. Il modulo &egrave; uscito solo per il Videopac PAL, non per l&rsquo;Odyssey&sup2; NTSC: con lo standard NTSC la cartuccia non legge pi&ugrave; i tasti (osservato con le ROM vere). Il motore &laquo;pensa&raquo; per qualche secondo prima di rispondere. Si gioca con la tastiera della console: <b>Y</b> o <b>N</b> alla prima domanda, poi il livello (1-6), le mosse con lettera e cifra (per esempio E 2 E 4) e <b>INVIO</b> per confermare.</p>
+          </div></div>
+        </div>
+      <div class="sep" id="charset-dl" style="margin-top:8px">
+        <div class="fh" style="margin-top:0"><b>Scarica da GitHub</b>
+          <button type="button" class="help" aria-expanded="false" aria-controls="h-dl" aria-label="Aiuto: scarico dei set di caratteri" title="Aiuto">?</button></div>
+        <div class="helpbox" id="h-dl" hidden>
+          <p>All&rsquo;apertura la pagina li scarica gi&agrave; da sola (sorgente pubblico di O2EM su <code>raw.githubusercontent.com</code>, in sola lettura, senza inviare nessun tuo dato): se non c&rsquo;&egrave; connessione resta il set GPL incluso e puoi riprovare con questi pulsanti.</p>
+          <p>Nel codice della pagina il set originale non c&rsquo;&egrave;. Per aprire la pagina senza nessuna richiesta di rete aggiungi <code>?offline</code> all&rsquo;indirizzo.</p>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button type="button" id="b-dl-vdc" title="Legge cset.c dal sorgente pubblico di O2EM su GitHub">Scarica il set di caratteri del chip video da GitHub</button>
+          <button type="button" id="b-dl-ef" title="Legge vpp_cset.c dal sorgente pubblico di O2EM su GitHub">Scarica il set dell&rsquo;EF9341 (Videopac+) da GitHub</button>
+        </div>
+        <progress id="dl-prog" max="100" hidden aria-label="Avanzamento dello scarico"></progress>
+      </div>
+      </details>
+    </details>
+    <details id="d-state">
+      <summary>Stato e sessione</summary>
+      <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-state" aria-label="Aiuto: stato e sessione" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-state" hidden>
+        <p>Lo stato di una partita contiene solo lo stato della macchina e le impronte dei file, mai i file. Per riaprire uno stato (.o2state) o una sessione usa &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; o trascinali sulla pagina.</p>
+        <p>La sessione ricorda elenco, BIOS, gioco in uso, stato di ogni gioco e impostazioni: un solo file per ritrovare tutto.</p>
+      </div>
+      <div class="row"><button id="b-save" disabled>Salva stato</button></div>
+      <div class="privacy">La sessione contiene tutti i dump (BIOS e cartucce) che hai caricato: &egrave; un file personale, non condividerlo.</div>
+      <div class="row"><button id="b-sess-save">Salva sessione (contiene i dump)</button></div>
+    </details>
+    <details id="d-net">
+      <summary>Rete e copertine</summary>
+      <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-net" aria-label="Aiuto: rete" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-net" hidden>
+        <p>All&rsquo;apertura la pagina legge solo i set di caratteri da GitHub (salvo con <code>?offline</code>); per il resto non contatta nessun indirizzo da sola: solo se premi &laquo;Scarica&raquo; legge (in sola lettura, solo https) il file dall&rsquo;indirizzo che scrivi qui: nessun tuo file o dato viene inviato. Il file scaricato si tratta come se l&rsquo;avessi scelto dal disco.</p>
+        <p>Se lo scarico da qui non funziona (spesso il sito non permette la lettura da un&rsquo;altra pagina: archive.org, per esempio, non la permette), scarica il file con il browser e poi caricalo con &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo;.</p>
+        <p>Gli archivi possono contenere giochi e BIOS di terzi: scarica solo ci&ograve; che hai il diritto di avere (la responsabilit&agrave; &egrave; tua).</p>
+      </div>
+      <label class="f" for="net-url">Indirizzo (https://&hellip;) di un file o di un archivio</label>
+      <input type="text" id="net-url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://&hellip;">
+      <label class="f" for="net-kind">Che cosa scarichi</label>
+      <select id="net-kind"><option value="games">Giochi e BIOS (file o archivi .zip)</option><option value="covers">Copertine (immagini o zip di immagini)</option></select>
+      <div class="row"><button type="button" id="net-go">Scarica</button><button type="button" id="net-cancel" disabled>Annulla</button></div>
+      <progress id="net-prog" max="100" hidden aria-label="Avanzamento dello scarico"></progress>
+      <div class="dim" id="net-status" role="status" aria-live="polite" style="margin-top:4px"></div>
+      <div class="sep fh" style="margin-bottom:0"><b>Copertine dei giochi</b><button type="button" class="help" aria-expanded="false" aria-controls="h-covers" aria-label="Aiuto: copertine" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-covers" hidden>
+        <p>Immagini PNG, JPEG, WebP o GIF (anche in uno zip), abbinate al gioco per titolo (per esempio &laquo;Killer Bees.png&raquo;; anno e paese tra parentesi nel nome aiutano a distinguere le versioni). Si caricano con &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; (anche molte insieme: selezionale tutte nella cartella) o trascinandole sulla pagina.</p>
+        <p>Restano nel browser finch&eacute; la pagina &egrave; aperta: non entrano nella sessione e non vengono inviate.</p>
+      </div>
+      <div class="row"><button type="button" id="b-covers-clear" disabled>Svuota copertine</button></div>
+      <div class="dim" id="covers-info" data-dyn style="margin-top:6px"></div>
+    </details>
+    <details id="d-look">
+      <summary>Aspetto (filtri da tubo catodico)</summary>
+      <label class="f" for="look-preset">Filtri da tubo catodico</label>
+      <select id="look-preset">
+        <option value="esatto">Nessun filtro (immagine esatta)</option>
+        <option value="leggero">Tubo catodico, leggero</option>
+        <option value="anni80">Tubo catodico anni &rsquo;80</option>
+        <option value="custom">Personalizzato</option>
+      </select>
+      <div class="sl"><label for="look-blur">Sfocatura del segnale</label><input type="range" id="look-blur" min="0" max="100" step="1"><output data-dyn id="look-blur-v" for="look-blur">0</output></div>
+      <div class="sl"><label for="look-persist">Persistenza del fosforo</label><input type="range" id="look-persist" min="0" max="90" step="1"><output data-dyn id="look-persist-v" for="look-persist">0</output></div>
+      <div class="sl"><label for="look-glow">Alone</label><input type="range" id="look-glow" min="0" max="100" step="1"><output data-dyn id="look-glow-v" for="look-glow">0</output></div>
+      <div class="sl"><label for="look-scan">Righe di scansione</label><input type="range" id="look-scan" min="0" max="100" step="1"><output data-dyn id="look-scan-v" for="look-scan">0</output></div>
+      <div class="sl"><label for="look-mask">Maschera (punti rosso, verde, blu)</label><input type="range" id="look-mask" min="0" max="100" step="1"><output data-dyn id="look-mask-v" for="look-mask">0</output></div>
+      <div class="sl"><label for="look-curve">Curvatura dello schermo</label><input type="range" id="look-curve" min="0" max="100" step="1"><output data-dyn id="look-curve-v" for="look-curve">0</output></div>
+      <label class="f" for="look-detail">Dettaglio (righe, maschera e curvatura)</label>
+      <select id="look-detail"><option value="3">3 &times; 3 pixel per punto</option><option value="4">4 &times; 4 pixel per punto (pi&ugrave; pesante)</option></select>
+      <div class="dim" id="look-info" data-dyn style="margin-top:6px"></div>
+    </details>
+    <details id="d-keys">
+      <summary>Tasti, joystick e gamepad</summary>
+      <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-keys" aria-label="Aiuto: tasti, joystick e gamepad" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-keys" hidden>
+        <p>Tastiera della console: cifre, lettere, <kbd>Spazio</kbd>, <kbd>Invio</kbd> (ENT), <kbd>Esc</kbd> o <kbd>Canc</kbd> (CLR), <kbd>+ - * / = . ? :</kbd>.
+          Scorciatoie: <kbd>F8</kbd> pausa, <kbd>F9</kbd> reset console, <kbd>F10</kbd> schermo intero.</p>
+        <p>Gamepad: croce o levetta sinistra = direzioni; A, B, X, Y o i dorsali = fuoco; Start = ENT; Indietro = CLR. Se il gamepad non compare, collegalo e premi un suo tasto (il browser lo mostra solo dopo la prima pressione).</p>
+      </div>
+      <div class="row">
+        <button id="p-tastierino">Joystick 2 sul tastierino</button><button id="p-portatile">Joystick 2 su I J K L (portatile)</button>
+      </div>
+      <table class="keys" id="keytab"><thead><tr><th>Azione</th><th>Joystick 1</th><th>Joystick 2</th></tr></thead><tbody data-dyn></tbody></table>
+      <div class="dim" id="cap-note" style="margin-top:4px"></div>
+      <label class="f" for="pad1">Gamepad per il joystick 1</label>
+      <select id="pad1" data-dyn></select>
+      <label class="f" for="pad2">Gamepad per il joystick 2</label>
+      <select id="pad2" data-dyn></select>
+      <div class="dim" id="pad-info" data-dyn style="margin-top:4px"></div>
+      <div class="row"><label><input type="checkbox" id="vk"> Tastiera a schermo</label></div>
+    </details>
+    <details id="d-chars">
+      <summary>Editor dei caratteri (set GPL e personalizzati)</summary>
+      <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-chars" aria-label="Aiuto: editor dei caratteri" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-chars" hidden>
+        <p>La pagina contiene un set di caratteri <b>GPL disegnato da zero</b>, cos&igrave; si pu&ograve; giocare anche senza l&rsquo;originale. Qui lo puoi ritoccare: la modifica si vede subito nel gioco in corso (senza riavviare), si salva come file .bin e si pu&ograve; riaprire. Puoi anche aprire il set originale e correggerlo carattere per carattere.</p>
+        <p>Disegno: clic accende o spegne (il primo punto decide); Maiusc o tasto destro spegne. Con la tastiera: frecce per muoversi, spazio o Invio per accendere o spegnere.</p>
+        <p>&laquo;Scarica da O2EM (GitHub)&raquo; legge il sorgente pubblico di O2EM da <code>raw.githubusercontent.com</code> (non invia nessun dato tuo; la pagina lo fa gi&agrave; da sola all&rsquo;apertura, salvo con <code>?offline</code>) e mette il set in uso subito; non resta nel codice di questa pagina. Salvalo poi con &laquo;Salva il set (.bin)&raquo;.</p>
+        <p>Per riaprire un set (un .bin di 512 o 2560 byte, uno zip che lo contiene, oppure un sorgente C <code>.c</code> / <code>.h</code> / <code>.txt</code> con la tabella) usa &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; (o trascinalo sulla pagina). Il set resta nel browser; i file salvati sono tuoi.</p>
+      </div>
+      <div class="row" role="group" aria-label="Quale set modificare">
+        <button type="button" id="ce-k-vdc" aria-pressed="true">Chip video 8244/8245 (64 caratteri)</button>
+        <button type="button" id="ce-k-ef" aria-pressed="false">EF9341, Videopac+ G7400 (256 voci)</button>
+      </div>
+      <div class="dim" id="ce-info" data-dyn style="margin-top:6px"></div>
+      <div class="ce-main">
+        <div><canvas id="ce-grid" width="208" height="208" tabindex="0" role="application" aria-label="Griglia dei caratteri: frecce per scegliere"></canvas></div>
+        <div>
+          <canvas id="ce-pix" width="176" height="176" tabindex="0" role="application" aria-label="Disegno del carattere: clic o trascina per accendere e spegnere i punti; con la tastiera frecce e spazio"></canvas>
+        </div>
+      </div>
+      <div class="dim" id="ce-sel" data-dyn style="margin-top:6px"></div>
+      <div class="row">
+        <button type="button" id="ce-undo" disabled>Annulla</button><button type="button" id="ce-redo" disabled>Ripeti</button>
+        <button type="button" id="ce-clear">Azzera</button><button type="button" id="ce-inv">Inverti</button>
+        <button type="button" id="ce-fh">Ribalta &harr;</button><button type="button" id="ce-fv">Ribalta &varr;</button>
+      </div>
+      <div class="row">
+        <button type="button" id="ce-l" aria-label="Sposta a sinistra">&larr;</button><button type="button" id="ce-u" aria-label="Sposta in alto">&uarr;</button>
+        <button type="button" id="ce-d" aria-label="Sposta in basso">&darr;</button><button type="button" id="ce-r" aria-label="Sposta a destra">&rarr;</button>
+        <label><input type="checkbox" id="ce-wrap"> ruota (i punti che escono rientrano)</label>
+        <button type="button" id="ce-copy">Copia</button><button type="button" id="ce-paste" disabled>Incolla</button>
+      </div>
+      <details>
+        <summary>Testo del carattere (per copiarlo, incollarlo o condividerlo)</summary>
+        <div class="dim"><code>#</code> acceso, <code>.</code> spento; una riga per riga di punti (al massimo 8).</div>
+        <textarea id="ce-ascii" rows="9" spellcheck="false" aria-label="Carattere in forma di testo"></textarea>
+        <div class="row"><button type="button" id="ce-ascii-apply">Applica il testo</button></div>
+      </details>
+      <div class="row">
+        <button type="button" id="ce-save">Salva il set (.bin)</button>
+        <button type="button" id="ce-revert" disabled>Torna al set GPL</button>
+      </div>
+      <div class="row"><button type="button" id="ce-dl" data-dyn>Scarica da O2EM (GitHub)</button></div>
+      <details id="ce-howto">
+        <summary>Come ricavare i set di caratteri originali</summary>
+        <p>I set originali sono dati dei chip (non fanno parte del BIOS): questa pagina non li contiene: li legge da GitHub (O2EM) all&rsquo;apertura, se c&rsquo;&egrave; connessione. Se non ci riesce, tre strade, dalla pi&ugrave; semplice:</p>
+        <ol>
+          <li><b>O2EM</b> (la via pi&ugrave; semplice). Nel sorgente C di O2EM il set del chip video &egrave; una tabella di 512 byte, <code>cset[512]</code> nel file <code>src/cset.c</code> (controllato sul sorgente pubblicato su GitHub nella versione <code>libretro-o2em</code>: github.com/libretro/libretro-o2em). Pi&ugrave; semplice: premi i pulsanti <b>&laquo;Scarica &hellip; da GitHub&raquo;</b> in &laquo;Macchina e giochi&raquo; (o &laquo;Scarica da O2EM&raquo; qui sopra). A mano: apri <a href="https://github.com/libretro/libretro-o2em/blob/master/src/cset.c" target="_blank" rel="noopener noreferrer">github.com/libretro/libretro-o2em/blob/master/src/cset.c</a> (set del chip video; per l&rsquo;EF9341 del G7400: <a href="https://github.com/libretro/libretro-o2em/blob/master/src/vpp_cset.c" target="_blank" rel="noopener noreferrer">src/vpp_cset.c</a>), salva il file con &laquo;Raw&raquo; (o scarica lo zip del sorgente), poi aggiungilo con &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; (il <code>.c</code> va bene cos&igrave; com&rsquo;&egrave;): la pagina trova la tabella da sola e scrive &laquo;set riconosciuto&raquo;. (I link si aprono solo se li clicchi; se il sito cambia i nomi dei file, cerca &laquo;libretro-o2em&raquo; su GitHub.) Subito dopo premi &laquo;Salva il set (.bin)&raquo;: ottieni il tuo <code>charset_i8244.bin</code>, da riusare in futuro come gli altri file. Da riga di comando: <code>python3 tools/extract_charset.py CARTELLA_DEL_SORGENTE -o charset_i8244.bin</code>. Il sorgente di O2EM ha la sua licenza (Artistic License 2.0): il file che ne ricavi &egrave; per te.</li>
+          <li><b>MAME.</b> Le raccolte di ROM di MAME tengono il set come file separato dal BIOS: <code>charset_i8244.bin</code> (512 byte) per il chip video, <code>charset_ef9340_1.rom</code> (2560 byte) per il Videopac+ G7400 (in MAME &egrave; segnato come dump &laquo;cattivo&raquo;: ricavato dal datasheet, non letto dal chip). Di solito stanno in un piccolo zip col nome del chip (<code>i8244</code>, <code>ef9340_1</code>). Aggiungilo con &laquo;Aggiungi file&raquo; insieme agli altri file. Il CRC-32 del primo, <code>b46a3f31</code> (dichiarato da MAME), &egrave; <b>lo stesso</b> del set di O2EM: due fonti indipendenti concordano. Anche il CRC <code>8de85988</code> della ROM EF9341 coincide con quello ricavato da O2EM. <i>I nomi dei file nelle raccolte di MAME non li ho potuti controllare su una copia: DA VERIFICARE.</i></li>
+          <li><b>ROM dell&rsquo;EF9341 (Videopac+ G7400).</b> Il file <code>src/vpp_cset.c</code> di O2EM contiene la ROM come tabella di 2 &times; 1280 valori con i bit scritti al contrario: l&rsquo;editor li rimette in ordine e, se l&rsquo;impronta coincide con quella di MAME (CRC-32 <code>8de85988</code>, <b>verificato</b>: O2EM e MAME hanno gli stessi dati), la accetta. Attenzione: &egrave; ricavata dal datasheet del chip, non letta dal chip vero (MAME la segna come dump &laquo;cattivo&raquo;).</li>
+          <li><b>Altri emulatori</b> con il set in un file a parte o in una tabella: vale lo stesso, purch&eacute; il file sia di 512 byte (chip video) o 2560 byte (EF9341), oppure contenga una tabella C di quella lunghezza.</li>
+        </ol>
+        <p>Il set GPL incluso &egrave; leggibile ma <b>non identico</b> all&rsquo;originale: i giochi che usano i simboli speciali (celle 48-63 del chip video) li mostrano in altro modo, e alcuni diventano difficili da giocare. Se conosci i disegni giusti, correggili qui e salva il .bin: un set tuo e disegnato da te si pu&ograve; condividere con la stessa licenza del progetto (GPL-3.0); un set copiato dall&rsquo;originale no.</p>
+      </details>
+    </details>
+    <details id="d-about" class="about">
+      <summary>Informazioni e licenza</summary>
+      <p><b>O2web</b> &mdash; emulatore Odyssey&sup2; / Videopac per browser. &copy; 2026 by Agara73.</p>
+      <p>Questo programma &egrave; software libero: puoi ridistribuirlo e/o modificarlo secondo i termini della GNU General Public License, versione 3, pubblicata dalla Free Software Foundation.
+        &Egrave; distribuito nella speranza che sia utile, ma <b>senza alcuna garanzia</b>, nemmeno quella implicita di commerciabilit&agrave; o di idoneit&agrave; a uno scopo particolare. Vedi la licenza per i dettagli.</p>
+      <p>La licenza copre <b>solo il codice</b>. I giochi, il BIOS, il set di caratteri del chip video e le copertine restano dei rispettivi titolari e non fanno parte di questo programma: i file li porti tu, per uso personale
+        (o li scarichi tu da un indirizzo che scegli, solo quando premi &laquo;Scarica&raquo;); i set di caratteri si leggono da GitHub all&rsquo;apertura, salvo con <code>?offline</code>.</p>
+      <p>Codice sorgente: questa pagina contiene tutto il codice JavaScript in chiaro (non offuscato n&eacute; compresso); i moduli separati, i test e gli strumenti stanno nel pacchetto dei sorgenti.
+        Testo ufficiale della licenza: <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer">gnu.org/licenses/gpl-3.0</a> (il link si apre solo se lo clicchi).</p>
+      <p>Il <b>catalogo delle cartucce</b> (numeri Videopac, cataloghi, titoli nelle varie lingue, rarit&agrave;, segnalazione &laquo;solo Videopac+&raquo;) viene dalla lista <i>Videopac/Odyssey2 Cartridge list</i> v0.74 (28/01/2006) di <b>Maurice Simon</b> &lt;maurice@videopac.info&gt; (<a href="https://www.renelips.nl" target="_blank" rel="noopener noreferrer">www.renelips.nl</a>): l&rsquo;autore permette di copiarla, intera o in parte, senza scopo di lucro e citandolo. Quei dati <b>non</b> sono coperti dalla GPL del codice. I nomi delle ROM sono quelli della lista software di MAME (CC0).</p>
+      <div id="photo-credits" data-dyn class="dim" style="display:none"></div>
+      <details>
+        <summary>Testo completo della licenza (GPL-3.0, in inglese)</summary>
+        <pre class="gpl" id="gpl-text" tabindex="0">/*__LICENSE__*/</pre>
+      </details>
+    </details>
+    <section id="d-don" class="static" aria-labelledby="don-h">
+      <h2 id="don-h">Donazioni</h2>
+      <p>O2web &egrave; gratuito e a codice aperto. Se ti &egrave; utile e vuoi sostenere il progetto, puoi farmi un regalo dalla mia lista dei desideri su Amazon: &egrave; facoltativo e non cambia niente nel programma.</p>
+      <p><a class="don-link" id="don-link" href="https://www.amazon.it/hz/wishlist/dl/invite/AQICAHgv7cct2SGZ58TbNYwiFrb-8NeSw0t4jGZKtponcI7CSwEmMKXjbP0B9o5djm62xJUNAAAAkTCBjgYJKoZIhvcNAQcGoIGAMH4CAQAweQYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAzKetxG4LAarjsCG1ACARCATPfJzfeSbzYEJJQLZYBWgnMKZT4GIgbqvEfj77j5OTYvrfWUs75qdk6K3LLvkggcmE0iTJ8X4oyFdZW-2eLkvPBhQaCjBET79Fwoy9w?ref_=wl_share" target="_blank" rel="noopener noreferrer">Lista dei desideri su Amazon</a></p>
+      <p class="dim">Il link si apre in un&rsquo;altra scheda solo se lo clicchi: la pagina non contatta Amazon.</p>
+    </section>
+    <div id="info"></div>
+  </aside>
+</main>
+<footer>
+  O2web &middot; &copy; 2026 by Agara73 &middot; software libero, GPL-3.0 (solo il codice; vedi &laquo;Informazioni e licenza&raquo;). I giochi, il BIOS e il set di caratteri restano dei rispettivi titolari;
+  i dump li porta l&rsquo;utente, per uso personale, e non lasciano mai il suo computer. Codice originale; MAME e O2EM sono stati letti solo come documentazione.
+</footer>
+<script>
+/*__BUNDLE__*/
+</script>
+</body>
+</html>
