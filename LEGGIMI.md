@@ -36,6 +36,7 @@ ne' set di caratteri del chip video**: i dump li porti tu (uso personale) e sono
 | `src/z80.js`, `src/chessmod.js`, `test/z80_record.py`, `test/z80_run.js`, `test/test_z80_misc.js`, `test/zex_run.js`, `test/test_chess.js`, `test/test_chess_app.js`, `test/chess_testrom.js`, `hw/chessmod_ref.py`, `test/chess_record.py`, `test/chess_run.js`, `test/chess_real.js` | **tappa 6a**: Z80 / NSC800 originale (provato passo per passo contro il pacchetto Python `z80`, ZEXDOC / ZEXALL), modulo scacchi Philips C7010 (Z80 + ROM da 8 KB + RAM da 2 KB + due latch verso l'8048; la ROM la porta l'utente), ROM di prova ORIGINALI (nessuna ROM vera nel pacchetto), riferimento a parte in Python (`hw/chessmod_ref.py`), prova con le ROM vere in locale (`chess_real.js`) |
 | `src/i18n.js`, `src/lang_en.js`, `src/lang_en_dom.js`, `test/test_i18n.js`, `test/browser_i18n.py` | **tappa 5d**: lingue (inglese predefinito, italiano; bandiere in alto a destra; `?lang=it`): `t()` con modelli e frammenti per i messaggi dei moduli di base, tabella dei testi fissi dell'HTML, pannello «Donazioni» (nel template) |
 | `src/machines.js`, `src/app.js`, `src/ui.js`, `web/index.template.html`, `test/test_machine.js`, `test/browser_check.py` | **tappa 5c**: scelta della macchina (Odyssey 2, G7000, G7200 in bianco e nero, C52, Jopac, G7400; voci senza BIOS in grigio), piastra dei tasti come quelle del G7000 e fascia «Schermo e suono» sotto lo schermo, pannelli riordinati, niente collegamenti a raccolte |
+| `src/touch.js`, `src/pacer.js`, `hw/touch_ref.py`, `hw/pacer_ref.py`, `test/touch_vectors.py`, `test/test_touch.js`, `test/pacer_vectors.py`, `test/test_pacer.js`, `test/browser_mobile.py` | **tappa 8**: web mobile: joystick a tocco (croce fissa o stick che segue il dito, piu' dita), comandi a tocco nella pagina (verticale e orizzontale, schermo intero con i comandi), passo dell'emulazione con l'orologio della pagina e piccola correzione dall'audio (anticipo adattato ai telefoni con l'audio a blocchi); riferimenti indipendenti in Python e prova della pagina su un telefono simulato |
 
 I file vengono dal progetto Spectrum e conservano il suo vocabolario ("tappa 3", "nucleo Z80"): contano solo i contenuti. In
 particolare le "Semplificazioni" nella testata di `o2hw.py` valgono per lo Spectrum e **non vanno portate** nel progetto browser
@@ -147,3 +148,13 @@ Catalogo: `src/vplist_data.js` (GENERATO da `tools/make_vplist.py` dalla lista H
 Moduli: `src/sha1.js`, `src/gamedb_data.js` (generato, 187 voci), `src/gamenames.js` (sigle, elenchi di nomi come `Gamelist777.txt`, titolo), `src/gamelist.js` (voci unite per SHA-256, filtro, ordine),
 `src/preview.js` (copione di tasti in due fasi, punteggio dei quadri, riduzione a 80 x 54) e `src/previews.js` (coda a fette di tempo e cache in memoria); riferimento indipendente `hw/preview_ref.py`.
 La tabella incorporata contiene titoli di giochi (lista CC0 di MAME): non e' grafica ne' dati delle ROM, ma e' da tenere presente per la regola sui titoli. Le anteprime stanno solo in memoria.
+
+## Tappa 8: web mobile (solo sviluppatori)
+```sh
+sh test/run_all.sh CARTELLA_DEI_DUMP                        # tutto; i passi 9r (tocco) e 9s (passo) sono quelli della tappa 8, il 10 include browser_mobile.py
+python3 -I test/touch_vectors.py /tmp/t.json && node test/test_touch.js /tmp/t.json   # joystick a tocco contro hw/touch_ref.py
+python3 -I test/pacer_vectors.py /tmp/p.json && node test/test_pacer.js /tmp/p.json   # passo dell'emulazione contro hw/pacer_ref.py (18 scenari)
+python3 -I test/browser_mobile.py dist/o2web.html CARTELLA /tmp/shots   # pagina su un Android simulato (screenshot della sola zona dei comandi)
+python3 -I test/mutate2.py pacer --dumps CARTELLA --stress x --rec x --pacer-vec /tmp/p.json   # mutazione (anche touch con --touch-vec)
+```
+Misure sul telefono vero (Motorola Edge 60 Pro) e decisioni: `o2web-stato.md`, sezione «Tappa 8 - web mobile».

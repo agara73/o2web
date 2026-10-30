@@ -90,8 +90,14 @@ joystick). In «Tasti, joystick e gamepad» ogni azione si puo' riassegnare («C
 mappatura standard (croce o levetta = direzioni, A B X Y e dorsali = fuoco, Start = ENT, Indietro = CLR); un pad per giocatore, in automatico o a scelta.
 C'e' anche una **tastiera a schermo** (utile col mouse o col tocco).
 
-**Suono.** Il suono parte con il primo clic o tasto (regole del browser); volume e «Muto» sotto lo schermo. Con l'audio attivo il tempo dell'emulazione segue
-l'audio. Il suono e' modellato da documentazione di terzi e non e' stato confrontato con la macchina vera (vedi `o2web-stato.md`).
+**Telefono e tablet.** Con lo schermo tattile accanto allo schermo compaiono i **comandi a tocco**: croce del joystick 1 a sinistra, «Fuoco» e «Tastiera» a destra
+(direzione e fuoco insieme si possono premere con due dita). In «Tasti, joystick e gamepad»: «Comandi a tocco» (automatici, sempre, mai) e «Joystick a tocco»
+(croce fissa, oppure uno stick che nasce dove appoggi il dito e lo segue). In orizzontale schermo e comandi stanno affiancati; lo schermo intero tiene anche i comandi.
+Provato su un telefono Android vero (Chrome); iPhone non ancora provato.
+
+**Suono.** Il suono parte con il primo clic o tasto (regole del browser); volume e «Muto» sotto lo schermo. Il ritmo dell'emulazione lo da' l'orologio della pagina,
+con una piccola correzione (al massimo 0,5%) dall'audio; la riserva di suono in coda si adatta da sola al browser (di piu' sui telefoni che fanno avanzare
+l'audio a blocchi grandi). Sotto lo schermo le statistiche mostrano fotogrammi al secondo, ridisegni, vuoti dell'audio, riserva e ritardo dichiarato dal browser. Il suono e' modellato da documentazione di terzi e non e' stato confrontato con la macchina vera (vedi `o2web-stato.md`).
 
 **Stato di una partita.** «Salva stato» scarica un file `.o2state` con lo stato della macchina e le impronte SHA-256 di BIOS, cartuccia e set di caratteri, **non** i file;
 «Aggiungi file...» (o trascinarlo sulla pagina) lo riprende cercando nell'elenco BIOS e cartuccia giusti. Stati di un altro BIOS, di un'altra cartuccia, di un altro
@@ -177,7 +183,10 @@ python3 -I test/look_record.py /tmp/l && node test/test_look.js /tmp/l CARTELLA_
 node test/test_net.js                     # rete su richiesta con un fetch FINTO (nessuna richiesta vera): indirizzi, limiti, attesa, annullamento, reindirizzamenti, CSP, scansione statica
 node test/test_covers.js                   # copertine: riconoscimento delle immagini, nomi con anno e paese, abbinamento, zip annidati, limiti (immagini sintetiche)
 node test/test_app_net.js                  # regista con scarico e copertine: smistamento, sessioni rifiutate dalla rete, annullamento, messaggi esatti
-node test/test_app.js CARTELLA_DEI_DUMP    # regista senza DOM: cambio gioco, set di caratteri, stati, BIOS, sessioni, passo guidato dall'audio; include test/app_extra.js
+node test/test_app.js CARTELLA_DEI_DUMP    # regista senza DOM: cambio gioco, set di caratteri, stati, BIOS, sessioni, passo (anche un telefono con l'audio a blocchi); include test/app_extra.js
+python3 -I test/touch_vectors.py /tmp/t.json && node test/test_touch.js /tmp/t.json   # tappa 8: joystick a tocco contro hw/touch_ref.py (riferimento indipendente)
+python3 -I test/pacer_vectors.py /tmp/p.json && node test/test_pacer.js /tmp/p.json   # tappa 8: passo dell'emulazione contro hw/pacer_ref.py (computer, telefoni, pause)
+python3 -I test/browser_mobile.py dist/o2web.html CARTELLA_DEI_DUMP /tmp/shots   # tappa 8: pagina su un telefono simulato (tocchi veri, verticale e orizzontale, inglese)
 python3 -I test/vdc_stress.py /tmp/s.json && node test/vdc_stress.js /tmp/s.json     # chip video: prova casuale contro il modello
 python3 -I test/browser_check.py dist/o2web.html CARTELLA_DEI_DUMP /tmp/shots         # pagina intera in Chromium (screenshot locali)
 node tools/survey_carts.js BIOS.bin CARTELLA_CARTUCCE --frames 300                    # classificazione dinamica delle cartucce
