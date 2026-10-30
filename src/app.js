@@ -20,7 +20,8 @@ const {describeGame} = require('./gamenames.js');
 const {PreviewCache} = require('./previews.js');
 const S = require('./session.js');
 const {InputState, defaultBindings, assignPads, validateBindings} = require('./input.js');
-const {Audio, framesToRun} = require('./audio.js');
+const {Audio} = require('./audio.js');
+const {Pacer} = require('./pacer.js');
 const {isZip, listZip, pickEntry, extractEntry, ZipError} = require('./unzip.js');
 const {sha256} = require('./sha256.js');
 const {LOOK_DEFAULTS, LookError, checkLook, presetOf, nextPreset, pickFilters} = require('./look.js');
@@ -30,8 +31,7 @@ const Net = require('./netfetch.js');
 const {t: T} = require('./i18n.js');          // lingua: i messaggi si compongono con T (italiano nei test dei moduli, inglese o italiano nella pagina)
 const {findSetInFile, identify} = require('./charedit.js');
 
-const LEAD = 0.06;                // secondi di audio in coda a cui punta il passo guidato dall'audio
-const MAX_CATCHUP = 4;            // fotogrammi al massimo per passo
+const QUEUE_MAX = 1.0;            // s di audio in coda oltre i quali la coda si svuota (audio fermo, browser in difficolta')
 const MIN_RESUME_FRAMES = 30;     // un gioco che ha girato meno di cosi' non sostituisce il proprio stato memorizzato
 
 // dimensioni della schermata: scale 0 = la piu' grande che sta nell'area (con integer = solo multipli interi, ma se nemmeno 1x ci sta si
@@ -130,8 +130,7 @@ class App {
     this.con = null;
     this.audio = null;
     this.paused = false;
-    this.acc = 0;
-    this.last = null;
+    this.pacer = new Pacer();             // quanti fotogrammi a ogni chiamata (orologio della pagina, piccola correzione dall'audio)
     this.runMs = 0;
     this.blackWarned = false;
     this.framesRun = 0;                   // fotogrammi eseguiti dall'ultimo avvio
@@ -608,7 +607,7 @@ class App {
     if (this.sink) this.sink.flush();
     this.attachAudio();
     this.paused = false;
-    this.acc = 0; this.last = null; this.runMs = 0; this.blackWarned = false; this.framesRun = 0;
+    this.pacer.reset(); this.runMs = 0; this.blackWarned = false; this.framesRun = 0;
     this.msPerFrame = [];
     this.input.releaseAll();
     if (!con.cartInfo.ok) this.msg(T('Cartuccia non supportata: {reason}.', {reason: T(con.cartInfo.reason)}), 'warn');
@@ -825,7 +824,7 @@ class App {
 
   setPaused(p) {
     this.paused = !!p;
-    this.acc = 0; this.last = null;
+    this.pacer.reset();
     if (this.sink) { if (this.paused) this.sink.flush(); }
     this.changed();
   }
@@ -1065,23 +1064,19 @@ class App {
 
   get audioPaced() { return !!(this.audio && this.sink && this.sink.running); }
 
-  // chiamata a ogni rAF con l'ora in ms; ritorna il numero di fotogrammi emulati (0 = non ridisegnare)
+  // chiamata a ogni rAF con l'ora in ms; ritorna il numero di fotogrammi emulati (0 = non ridisegnare). Il ritmo lo da' l'orologio della
+  // pagina (pacer.js); con l'audio attivo il passo legge anche l'orologio e la coda dell'audio (piccola correzione, anticipo adattato)
   step(ts) {
     const con = this.con;
     if (!con) return 0;
-    const dt = this.last === null ? 0 : Math.min(ts - this.last, 100);
-    this.last = ts;
-    if (this.paused) return 0;
+    if (this.paused) { this.pacer.reset(); return 0; }
     this.applyInputs();
     const period = con.frameCycles / con.cyclesPerSecond;
-    let n = 0;
-    if (this.audioPaced) {
-      this.acc = 0;
-      n = framesToRun(this.sink.queued(), LEAD, period, MAX_CATCHUP);
-    } else {
-      this.acc += dt / 1000;
-      while (this.acc >= period && n < 3) { this.acc -= period; n++; }
-    }
+    const paced = this.audioPaced;
+    if (paced && this.sink.queued() > QUEUE_MAX) this.sink.flush();
+    const n = this.pacer.step(ts, period, paced ? {time: this.sink.ctx.currentTime, queued: this.sink.queued()} : null);
+    const dt = this.pacer.dt * 1000;
+    if (paced) this.sink.lead = this.pacer.lead;           // dopo un vuoto la coda riparte con l'anticipo adatto a questo browser
     for (let i = 0; i < n; i++) {
       const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
       con.runFrame();
@@ -1112,4 +1107,4 @@ class App {
   }
 }
 
-module.exports = {App, layoutSize, isImageFile, sniffSession, sniffState, LEAD, MAX_CATCHUP, MIN_RESUME_FRAMES, makeGame, makeBios, validateBindings};
+module.exports = {App, layoutSize, isImageFile, sniffSession, sniffState, QUEUE_MAX, MIN_RESUME_FRAMES, makeGame, makeBios, validateBindings};

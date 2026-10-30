@@ -1092,7 +1092,8 @@ function timingInfo(dt) {
   const c = sink.ctx;
   if (c) {
     const lat = typeof c.outputLatency === 'number' && c.outputLatency > 0 ? c.outputLatency : typeof c.baseLatency === 'number' ? c.baseLatency : NaN;
-    s += ' · ' + T('audio a vuoto: {n}/s · audio {rate} Hz, ritardo {lat} ms', {n: per(sink.underruns - ui.statUnder), rate: c.sampleRate, lat: Number.isFinite(lat) ? Math.round(lat * 1000) : '?'});
+    s += ' · ' + T('audio a vuoto: {n}/s · anticipo {lead} ms · audio {rate} Hz, ritardo {lat} ms',
+      {n: per(sink.underruns - ui.statUnder), lead: Math.round(app.pacer.lead * 1000), rate: c.sampleRate, lat: Number.isFinite(lat) ? Math.round(lat * 1000) : '?'});
   }
   return s;
 }
@@ -1116,7 +1117,7 @@ function tick(ts) {
     const s = app.takeStats();
     renderPads();
     $('stats').textContent = app.running ? (s ? T('emulazione: {ms} ms per fotogramma · {fps} fotogrammi/s', {ms: s.avg.toFixed(2), fps: (ui.statFrames * 1000 / (ts - ui.statT)).toFixed(1)}) : '') +
-      (app.running ? ' · ' + T(app.audioPaced ? 'passo guidato dall’audio' : sink.available ? 'audio non attivo (tocca la pagina)' : 'senza audio') : '') +
+      (app.running ? ' · ' + T(app.audioPaced ? 'ritmo: orologio della pagina, corretto dall’audio' : sink.available ? 'audio non attivo (tocca la pagina)' : 'senza audio') : '') +
       (app.running ? ' · ' + timingInfo(ts - ui.statT) : '') : '';
     ui.statFrames = 0;
     ui.statRaf = 0;

@@ -43,8 +43,8 @@ module.exports = async function appExtra(ok, eq) {
     const a = new App({fallbackCharset: FALLBACK});
     eq(a.settings, {standard: 'PAL', scale: 0, aspect: 'tv', integer: false, volume: 0.8, muted: false, pinB: 'auto', swapPads: false}, 'impostazioni iniziali');
     eq(a.padPrefs, {1: 'auto', 2: 'auto'}, 'gamepad iniziali');
-    ok(a.charset === null && a.charsetName === '' && a.biosId === null && a.gameId === null && a.con === null && a.audio === null && a.paused === false && a.acc === 0 &&
-      a.last === null && a.runMs === 0 && a.blackWarned === false && a.framesRun === 0 && a.rev === 0 && Array.isArray(a.msPerFrame) && a.msPerFrame.length === 0 && a.states.size === 0 &&
+    ok(a.charset === null && a.charsetName === '' && a.biosId === null && a.gameId === null && a.con === null && a.audio === null && a.paused === false && a.pacer.acc === 0 &&
+      a.pacer.last === null && a.runMs === 0 && a.blackWarned === false && a.framesRun === 0 && a.rev === 0 && Array.isArray(a.msPerFrame) && a.msPerFrame.length === 0 && a.states.size === 0 &&
       a.sink === null && a.bios === null && a.game === null && a.running === false && a.activeCharset === FALLBACK && a.audioPaced === false, 'campi iniziali');
     a.msg('x');   // senza onMessage: niente
     const got = []; const b = new App({onMessage: (t, k) => got.push([t, k]), fallbackCharset: FALLBACK});
@@ -203,10 +203,10 @@ module.exports = async function appExtra(ok, eq) {
     eq(h.last(), ['bad', 'Gioco non trovato nell’elenco.'], 'avvio: gioco non trovato');
     ok(a.con === null, 'avvio fallito: nessuna console');
     // campi sporchi, poi avvio: tutto azzerato
-    a.acc = 5; a.last = 3; a.runMs = 9; a.blackWarned = true; a.framesRun = 7; a.msPerFrame = [1]; a.paused = true;
+    a.pacer.acc = 5; a.pacer.last = 3; a.runMs = 9; a.blackWarned = true; a.framesRun = 7; a.msPerFrame = [1]; a.paused = true;
     h.clear();
     ok(a.start(ga.id) === true && a.running && a.gameId === ga.id && a.game === ga, 'avvio di Alfa');
-    ok(a.acc === 0 && a.last === null && a.runMs === 0 && a.blackWarned === false && a.framesRun === 0 && a.msPerFrame.length === 0 && a.paused === false, 'avvio: orologio e contatori azzerati');
+    ok(a.pacer.acc === 0 && a.pacer.last === null && a.runMs === 0 && a.blackWarned === false && a.framesRun === 0 && a.msPerFrame.length === 0 && a.paused === false, 'avvio: orologio e contatori azzerati');
     eq(h.msgs, [['warn', MANCA]], 'avvio: nota sul set di caratteri mancante');
     a.setCharset('cs.bin', rb(512)); h.clear();
     a.start(ga.id); eq(h.msgs, [], 'avvio con set di caratteri dell’utente: nessuna nota');
@@ -331,8 +331,8 @@ module.exports = async function appExtra(ok, eq) {
     eq(h.msgs[0], ['', 'Standard NTSC: la console riparte (avvio a freddo del gioco in uso).'], 'setStandard: messaggio');
     const hs = mkApp(null); hs.app.setStandard('NTSC'); ok(hs.app.settings.standard === 'NTSC' && hs.msgs.length === 0, 'setStandard senza console');
     // pausa
-    a.acc = 3; a.last = 5; const rp = a.rev; a.setPaused(1);
-    ok(a.paused === true && a.acc === 0 && a.last === null && a.rev === rp + 1, 'setPaused');
+    a.pacer.acc = 3; a.pacer.last = 5; const rp = a.rev; a.setPaused(1);
+    ok(a.paused === true && a.pacer.acc === 0 && a.pacer.last === null && a.rev === rp + 1, 'setPaused');
     const now0 = a.con.cpu.now; ok(a.step(100) === 0 && a.step(200) === 0 && a.con.cpu.now === now0, 'in pausa non si emula (e restituisce 0)');
     a.setPaused(0); ok(a.paused === false, 'fine pausa');
     // scarico
@@ -387,26 +387,26 @@ module.exports = async function appExtra(ok, eq) {
   {
     const h = await loaded(null), a = h.app; a.start(a.lib.games[0].id);
     const period = a.con.frameCycles / a.con.cyclesPerSecond;
-    ok(a.step(1000) === 0 && a.last === 1000 && a.runMs === 0 && a.framesRun === 0, 'primo passo: nessun intervallo');
+    ok(a.step(1000) === 0 && a.pacer.last === 1000 && a.runMs === 0 && a.framesRun === 0, 'primo passo: nessun intervallo');
     const n1 = a.step(1000 + 20.2);
-    ok(n1 === 1 && a.framesRun === 1 && Math.abs(a.acc - (0.0202 - period)) < 1e-12 && Math.abs(a.runMs - 20.2) < 1e-9, 'un fotogramma per 20,2 ms (acc ' + a.acc + ')');
-    a.acc = 0; a.last = 0;
-    a.last = 0; a.acc = 0; const rm = a.runMs;
+    ok(n1 === 1 && a.framesRun === 1 && Math.abs(a.pacer.acc - (0.0202 - period)) < 1e-12 && Math.abs(a.runMs - 20.2) < 1e-9, 'un fotogramma per 20,2 ms (acc ' + a.pacer.acc + ')');
+    a.pacer.acc = 0; a.pacer.last = 0;
+    a.pacer.last = 0; a.pacer.acc = 0; const rm = a.runMs;
     const n3 = a.step(5000);
-    ok(n3 === 3 && Math.abs(a.runMs - rm - 100) < 1e-9 && Math.abs(a.acc - (0.1 - 3 * period)) < 1e-12, 'dt limitato a 100 ms: 3 fotogrammi, acc ' + a.acc);
-    a.last = 0; a.acc = 0; const rm2 = a.runMs; a.step(100.5);
+    ok(n3 === 3 && Math.abs(a.runMs - rm - 100) < 1e-9 && Math.abs(a.pacer.acc - (0.1 - 3 * period)) < 1e-12, 'dt limitato a 100 ms: 3 fotogrammi, acc ' + a.pacer.acc);
+    a.pacer.last = 0; a.pacer.acc = 0; const rm2 = a.runMs; a.step(100.5);
     ok(Math.abs(a.runMs - rm2 - 100) < 1e-9, 'dt = 100,5 ms limitato a 100');
-    a.last = 0; a.acc = 0; a.step(100); ok(a.acc >= 0 && a.framesRun > 0, 'dt = 100 ms');
+    a.pacer.last = 0; a.pacer.acc = 0; a.step(100); ok(a.pacer.acc >= 0 && a.framesRun > 0, 'dt = 100 ms');
     // statistiche
-    a.msPerFrame = []; a.last = null; a.step(1); a.step(1 + 20.2); a.step(1 + 40.4 + 0.1);
+    a.msPerFrame = []; a.pacer.last = null; a.step(1); a.step(1 + 20.2); a.step(1 + 40.4 + 0.1);
     const st = a.takeStats(); ok(st && st.n >= 2 && st.avg >= 0 && st.avg < 1000 && a.takeStats() === null && a.msPerFrame.length === 0, 'takeStats: media, conteggio e azzeramento');
     // orologio finto per i tempi per fotogramma
     const realPerf = global.performance; let tick = 5000;
     Object.defineProperty(global, 'performance', {value: {now: () => tick++}, configurable: true, writable: true});
-    a.msPerFrame = []; a.last = null; a.step(1); a.step(1 + 20.2);
+    a.msPerFrame = []; a.pacer.last = null; a.step(1); a.step(1 + 20.2);
     const st2 = a.takeStats(); ok(st2 && st2.n === 1 && st2.avg === 1, 'tempo per fotogramma = differenza degli orologi (' + (st2 && st2.avg) + ')');
     Object.defineProperty(global, 'performance', {value: undefined, configurable: true, writable: true});
-    a.msPerFrame = []; a.last = null; a.step(1); a.step(1 + 20.2);
+    a.msPerFrame = []; a.pacer.last = null; a.step(1); a.step(1 + 20.2);
     const st3 = a.takeStats(); ok(st3 && st3.n === 1 && st3.avg >= 0 && st3.avg < 1000, 'senza performance: usa Date.now');
     Object.defineProperty(global, 'performance', {value: realPerf, configurable: true, writable: true});
     // schermo nero: runFrame finto, fb a zero
@@ -517,7 +517,7 @@ module.exports = async function appExtra(ok, eq) {
     eq(h2.last(), ['good', 'Sessione aperta: mia.o2session (2 giochi, 1 BIOS, 2 stati memorizzati); partita ripresa dallo stato memorizzato.'], 'sessione: messaggio');
     ok(b.running && b.gameId === b.lib.games.find((g) => g.name === gb.name).id && b.framesRun === MIN_RESUME_FRAMES && b.charsetName === 'dalla sessione' && b.charset.length === 512, 'sessione: partita, set di caratteri');
     eq([b.settings.scale, b.settings.aspect, b.settings.integer, b.settings.volume, b.settings.muted, b.settings.standard], [3, 'square', true, 0.35, true, 'PAL'], 'sessione: impostazioni');
-    ok(b.paused === false && b.acc === 0 && b.last === null && b.runMs === 0 && b.msPerFrame.length === 0, 'sessione: orologio azzerato');
+    ok(b.paused === false && b.pacer.acc === 0 && b.pacer.last === null && b.runMs === 0 && b.msPerFrame.length === 0, 'sessione: orologio azzerato');
     // aspetto e macchina nella sessione
     {
       const ha = await loaded(null), x = ha.app;

@@ -18,7 +18,7 @@ const MODULES = [
   ['./sha256.js', 'src/sha256.js'], ['./unzip.js', 'src/unzip.js'], ['./zipstore.js', 'src/zipstore.js'], ['./cpu8048.js', 'src/cpu8048.js'],
   ['./cartmap.js', 'src/cartmap.js'], ['./vdc.js', 'src/vdc.js'], ['./ef934x.js', 'src/ef934x.js'], ['./z80.js', 'src/z80.js'], ['./chessmod.js', 'src/chessmod.js'], ['./console.js', 'src/console.js'], ['./audio.js', 'src/audio.js'],
   ['./webaudio.js', 'src/webaudio.js'], ['./input.js', 'src/input.js'], ['./touch.js', 'src/touch.js'],['./sha1.js', 'src/sha1.js'], ['./gamedb_data.js', 'src/gamedb_data.js'], ['./vplist_data.js', 'src/vplist_data.js'], ['./vplist.js', 'src/vplist.js'], ['./gamenames.js', 'src/gamenames.js'], ['./library.js', 'src/library.js'], ['./gamelist.js', 'src/gamelist.js'], ['./preview.js', 'src/preview.js'], ['./previews.js', 'src/previews.js'], ['./covers.js', 'src/covers.js'], ['./netfetch.js', 'src/netfetch.js'], ['./look.js', 'src/look.js'], ['./machines.js', 'src/machines.js'], ['./photos.js', 'src/photos.js'], ['./photos_data.js', null], ['./session.js', 'src/session.js'],
-  ['./charedit.js', 'src/charedit.js'], ['./charui.js', 'src/charui.js'], ['./charset_own.js', 'hw/charset_own.js'], ['./charset9341_own.js', 'hw/charset9341_own.js'], ['./app.js', 'src/app.js'], ['./screen.js', 'src/screen.js'], ['./ui.js', 'src/ui.js'],
+  ['./charedit.js', 'src/charedit.js'], ['./charui.js', 'src/charui.js'], ['./charset_own.js', 'hw/charset_own.js'], ['./charset9341_own.js', 'hw/charset9341_own.js'], ['./pacer.js', 'src/pacer.js'], ['./app.js', 'src/app.js'], ['./screen.js', 'src/screen.js'], ['./ui.js', 'src/ui.js'],
 ];
 const COPY = '(c) 2026 by Agara73';
 

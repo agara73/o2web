@@ -254,6 +254,35 @@ class FakeCtx {
     ok(sink.queued() === 0, 'reset: coda svuotata');
   }
 
+  // ---- telefono (tappa 8): orologio dell'audio che avanza a blocchi di 4096 campioni a 48 kHz (85 ms), chiamate del browser a 66 Hz.
+  // Prima della tappa 8 (passo guidato dalla coda dell'audio) qui si emulavano circa 35 fotogrammi al secondo con 11,7 vuoti al secondo.
+  {
+    class JumpyCtx extends FakeCtx { constructor() { super(); this.sampleRate = 48000; } }
+    const sink = new AudioOutput({Ctx: JumpyCtx});
+    const a = mk(sink);
+    await a.openFiles([rd('bios/o2rom.bin'), rd('killerbees.bin')]);
+    a.start(a.lib.games[0].id);
+    a.enableAudio();
+    const ctx = sink.ctx, blk = 4096 / 48000;
+    let tt = 0, frames = 0, u0 = 0, maxQ = 0;
+    for (let i = 0; i < 66 * 20; i++) {
+      tt += 1000 / 66;
+      ctx.currentTime = Math.floor(tt / 1000 / blk) * blk;
+      const n = a.step(tt);
+      if (i === 66 * 3) { frames = 0; u0 = sink.underruns; }
+      if (i > 66 * 3) { frames += n; maxQ = Math.max(maxQ, sink.queued()); }
+    }
+    const fps = frames / 17;
+    ok(Math.abs(fps - 49.7) < 0.7, 'telefono con l\'audio a blocchi di 85 ms: ' + fps.toFixed(1) + ' fotogrammi/s (atteso ~49,7)');
+    ok(sink.underruns - u0 === 0, 'telefono: l\'audio non va mai a vuoto dopo i primi 3 secondi (' + (sink.underruns - u0) + ')');
+    ok(sink.lead > 0.13 && sink.lead < 0.16 && a.pacer.lead === sink.lead, 'telefono: anticipo adattato (' + Math.round(sink.lead * 1000) + ' ms) e passato all\'uscita audio');
+    ok(maxQ < 0.3, 'telefono: coda al massimo ' + Math.round(maxQ * 1000) + ' ms');
+    // coda cresciuta oltre misura (audio fermo): si svuota
+    sink.next = ctx.currentTime + 2;
+    a.step(tt += 15);
+    ok(sink.queued() < 1, 'coda oltre ' + 1 + ' s: svuotata (' + sink.queued().toFixed(2) + ' s)');
+  }
+
   console.log((fails ? 'ERRORI: ' + fails : 'OK') + ' (' + checks + ' controlli)');
   process.exit(fails ? 1 : 0);
 })().catch((e) => { console.log('ECCEZIONE ' + (e.stack || e)); process.exit(1); });

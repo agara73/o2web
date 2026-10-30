@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # (c) 2026 by Agara73 - SPDX-License-Identifier: GPL-3.0-only - emulatore Odyssey 2 / Videopac per browser
 """mutate2.py - prova di mutazione dei moduli delle tappe 2 e 3 (vdc.js, console.js, cartmap.js, sha256.js, unzip.js; audio.js, input.js,
-zipstore.js, library.js, session.js, webaudio.js, app.js; sha1.js, gamenames.js, gamelist.js, vplist.js, preview.js, previews.js della tappa 7; touch.js della tappa 8; look.js, machines.js, screen.js della tappa 4b; netfetch.js e covers.js della tappa 4c; ef934x.js della tappa 5; z80.js e chessmod.js della tappa 6a) e, con --cache/--replay, anche di cpu8048.js (comprese saveState/loadState).
+zipstore.js, library.js, session.js, webaudio.js, app.js; sha1.js, gamenames.js, gamelist.js, vplist.js, preview.js, previews.js della tappa 7; touch.js e pacer.js della tappa 8; look.js, machines.js, screen.js della tappa 4b; netfetch.js e covers.js della tappa 4c; ef934x.js della tappa 5; z80.js e chessmod.js della tappa 6a) e, con --cache/--replay, anche di cpu8048.js (comprese saveState/loadState).
 
 Per ogni mutante si copia src/ in una cartella temporanea con il file guastato e si lanciano i test, dal piu' veloce: test_misc.js,
 test_state.js, vdc_stress.js, line_run.js (e per la CPU anche run_cached.js, test_api.js, replay_run.js). Basta un test rosso per
 "uccidere" il mutante; uno che sopravvive a tutto va esaminato a mano (equivalente o test debole).
-Uso: python3 -I test/mutate2.py FILE (vdc|console|cartmap|sha256|unzip|cpu8048|audio|input|zipstore|library|session|webaudio|app|look|machines|screen|photos|netfetch|covers|ef934x|charedit|i18n|sha1|gamenames|gamelist|vplist|preview|previews|touch|z80|chessmod) --dumps DUMPS
+Uso: python3 -I test/mutate2.py FILE (vdc|console|cartmap|sha256|unzip|cpu8048|audio|input|zipstore|library|session|webaudio|app|look|machines|screen|photos|netfetch|covers|ef934x|charedit|i18n|sha1|gamenames|gamelist|vplist|preview|previews|touch|pacer|z80|chessmod) --dumps DUMPS
          --stress STRESS.json --rec RECDIR [--audio-ref AUDIO_REFDIR] [--look-ref LOOK_REFDIR] [--ef-ref EF.json] [--z80-ref Z80_REFDIR] [--cache CACHE.json --replay REPLAYDIR] [--n 0] [--seed 1] [--jobs 4] [--report FILE] [--retry RAPPORTO_PRECEDENTE]"""
 import argparse
 import os
@@ -88,6 +88,8 @@ def suites(target, o):
         return [node(T('test_input.js'), o.dumps), node(T('test_usability.js'), o.dumps)]
     if target == 'touch':
         return [node(T('test_touch.js'), o.touch_vec)]
+    if target == 'pacer':
+        return [node(T('test_pacer.js'), o.pacer_vec), node(T('test_app.js'), o.dumps)]
     if target == 'audio':
         return [node(T('test_audio.js'), o.audio_ref, o.dumps)]
     if target == 'library':
@@ -168,7 +170,7 @@ def run_one(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('target', choices=['vdc', 'console', 'cartmap', 'sha256', 'unzip', 'cpu8048', 'audio', 'input', 'zipstore', 'library', 'session', 'webaudio', 'app', 'look', 'machines', 'screen', 'photos', 'netfetch', 'covers', 'ef934x', 'charedit', 'i18n', 'z80', 'chessmod', 'sha1', 'gamenames', 'gamelist', 'vplist', 'preview', 'previews', 'touch'])
+    ap.add_argument('target', choices=['vdc', 'console', 'cartmap', 'sha256', 'unzip', 'cpu8048', 'audio', 'input', 'zipstore', 'library', 'session', 'webaudio', 'app', 'look', 'machines', 'screen', 'photos', 'netfetch', 'covers', 'ef934x', 'charedit', 'i18n', 'z80', 'chessmod', 'sha1', 'gamenames', 'gamelist', 'vplist', 'preview', 'previews', 'touch', 'pacer'])
     ap.add_argument('--dumps', required=True)
     ap.add_argument('--stress', required=True)
     ap.add_argument('--rec', required=True)
@@ -179,6 +181,7 @@ def main():
     ap.add_argument('--prev-ref', dest='prev_ref', help='cartella con vec.json (preview_vectors.py) e le anteprime registrate da preview_record.py')
     ap.add_argument('--vp-vec', dest='vp_vec', help='file preparato da test/vplist_vectors.py')
     ap.add_argument('--touch-vec', dest='touch_vec', help='file preparato da test/touch_vectors.py')
+    ap.add_argument('--pacer-vec', dest='pacer_vec', help='file preparato da test/pacer_vectors.py')
     ap.add_argument('--cache')
     ap.add_argument('--replay')
     ap.add_argument('--n', type=int, default=0, help='mutanti campionati (0 = tutti)')
