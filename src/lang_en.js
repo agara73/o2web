@@ -132,6 +132,8 @@ module.exports = {
   "audio non attivo (tocca la pagina)": "audio not active (tap the page)",
   "senza audio": "no audio",
   "passo guidato dall’audio": "audio-driven step",
+  "ridisegni: {raf}/s": "redraws: {raf}/s",
+  "audio a vuoto: {n}/s · audio {rate} Hz, ritardo {lat} ms": "audio ran dry: {n}/s · audio {rate} Hz, latency {lat} ms",
   "riconosciuto, {label}": "recognised, {label}",
   "impronta non nota: controlla che sia quello giusto": "unknown fingerprint: check that it is the right one",
   "In uso subito, senza riavviare.": "In use immediately, without restarting.",

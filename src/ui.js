@@ -36,7 +36,7 @@ const RESERVED = /^(F8|F9|F10|Tab|Meta|OS|Alt|ContextMenu|CapsLock)/;
 const ACTION_NAMES = {up: 'Su', right: 'Destra', down: 'Giù', left: 'Sinistra', fire: 'Fuoco'};
 
 const LOOK_SLIDERS = ['blur', 'persist', 'glow', 'scan', 'mask', 'curve'];
-const ui = {charRev: 0, covRev: -1, covClearT: 0, netWas: false, lookRev: -1, lookKey: '', machineKey: null, con: null, capture: null, rev: -1, foldersKey: null, toastT: 0, statT: 0, statFrames: 0, clearT: 0, vkBuilt: false, padKey: '', rows: [], pvCanvases: new Map(), visible: new Set(), io: null, pvT: 0};
+const ui = {charRev: 0, covRev: -1, covClearT: 0, netWas: false, lookRev: -1, lookKey: '', machineKey: null, con: null, capture: null, rev: -1, foldersKey: null, toastT: 0, statT: 0, statFrames: 0, statRaf: 0, statUnder: 0, clearT: 0, vkBuilt: false, padKey: '', rows: [], pvCanvases: new Map(), visible: new Set(), io: null, pvT: 0};
 
 // ---------------------------------------------------------------- messaggi nella pagina
 function log(text, kind) {
@@ -874,6 +874,7 @@ function applyTouch() {
   document.body.classList.toggle('touch-on', touch.on);
   $('tdir').classList.toggle('float', touch.pad.mode === 'float');
   if (!touch.on) touchRelease();
+  placeVk();
   relayout();
 }
 function touchGeometry() {
@@ -897,7 +898,15 @@ for (const id of ['tdir', 'tfire']) {
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) $(id).addEventListener(t, (ev) => { touch.pad.up(ev.pointerId); touchSync(); });
   $(id).addEventListener('contextmenu', (ev) => ev.preventDefault());       // la pressione lunga di Android non apre il menu
 }
-$('tkb').addEventListener('click', () => { const c = $('vk'); c.checked = !c.checked; c.dispatchEvent(new Event('change')); });
+$('tkb').addEventListener('click', () => {
+  const c = $('vk');
+  c.checked = !c.checked;
+  c.dispatchEvent(new Event('change'));
+  if (c.checked && !document.fullscreenElement) {                      // in orizzontale la tastiera va sotto lo schermo: la si porta in vista
+    const r = $('vkeys').getBoundingClientRect();
+    if (r.bottom > window.innerHeight) $('vkeys').scrollIntoView({block: 'nearest'});
+  }
+});
 $('tmode').addEventListener('change', (ev) => { touch.mode = ev.target.value; applyTouch(); });
 $('tstick').addEventListener('change', (ev) => { touch.pad.setMode(ev.target.value); touchSync(); applyTouch(); });
 if (coarse && coarse.addEventListener) coarse.addEventListener('change', applyTouch);
@@ -996,12 +1005,16 @@ $('b-swap').addEventListener('click', () => { app.setSwapPads(!app.swapPads); re
 $('b-crt').addEventListener('click', () => { app.cycleLook(); renderLook(); focusScreen(); });
 $('b-full').addEventListener('click', toggleFull);
 if (!$('stage').requestFullscreen) $('b-full').style.display = 'none';
-// a schermo intero con i comandi a tocco la tastiera della console va dentro #play (altrimenti non si vedrebbe), poi torna al suo posto
+// con i comandi a tocco (e a schermo intero di #play) la tastiera della console sta dentro #play, subito sotto croce e fuoco: sul
+// telefono si vede senza scorrere la pagina; altrimenti torna al suo posto in fondo alla colonna (computer: come prima)
 const vkHome = $('vkeys').parentNode;
-document.addEventListener('fullscreenchange', () => {
-  const inPlay = document.fullscreenElement === $('play'), vk = $('vkeys');
+function placeVk() {
+  const inPlay = touch.on || document.fullscreenElement === $('play'), vk = $('vkeys');
   if (inPlay && vk.parentNode !== $('play')) $('play').appendChild(vk);
   else if (!inPlay && vk.parentNode !== vkHome) vkHome.appendChild(vk);
+}
+document.addEventListener('fullscreenchange', () => {
+  placeVk();
   relayout();
   if (document.fullscreenElement) focusScreen();
 });
@@ -1071,6 +1084,18 @@ window.addEventListener('pointerdown', unlockAudio, true);
 window.addEventListener('keydown', unlockAudio, true);
 
 // ---------------------------------------------------------------- ciclo
+// misure per capire la velocita' sui telefoni (tappa 8): quante volte al secondo il browser chiama la pagina (ridisegni), quante volte
+// l'audio e' rimasto senza dati, frequenza e ritardo dichiarati dall'audio del browser. Solo lettura: non cambiano l'emulazione.
+function timingInfo(dt) {
+  const per = (v) => (dt > 0 ? (v * 1000 / dt).toFixed(1) : '0');
+  let s = T('ridisegni: {raf}/s', {raf: per(ui.statRaf)});
+  const c = sink.ctx;
+  if (c) {
+    const lat = typeof c.outputLatency === 'number' && c.outputLatency > 0 ? c.outputLatency : typeof c.baseLatency === 'number' ? c.baseLatency : NaN;
+    s += ' · ' + T('audio a vuoto: {n}/s · audio {rate} Hz, ritardo {lat} ms', {n: per(sink.underruns - ui.statUnder), rate: c.sampleRate, lat: Number.isFinite(lat) ? Math.round(lat * 1000) : '?'});
+  }
+  return s;
+}
 function tick(ts) {
   requestAnimationFrame(tick);
   let pads = [];
@@ -1084,14 +1109,18 @@ function tick(ts) {
   if (app.con !== ui.con) { ui.con = app.con; screen.resetLook(); }                // macchina nuova: la persistenza non porta con se' l'immagine di prima
   if (app.lookRev !== ui.lookRev) renderLook();
   if (n && app.con) { screen.paint(app.con.fb); ui.statFrames += n; }
+  ui.statRaf++;
   if (app.rev !== ui.rev) renderAll();
   else if (charui && app.charRev !== ui.charRev) { ui.charRev = app.charRev; renderCharInfo(); charui.poll(); }
   if (ts - ui.statT >= 500) {
     const s = app.takeStats();
     renderPads();
     $('stats').textContent = app.running ? (s ? T('emulazione: {ms} ms per fotogramma · {fps} fotogrammi/s', {ms: s.avg.toFixed(2), fps: (ui.statFrames * 1000 / (ts - ui.statT)).toFixed(1)}) : '') +
-      (app.running ? ' · ' + T(app.audioPaced ? 'passo guidato dall’audio' : sink.available ? 'audio non attivo (tocca la pagina)' : 'senza audio') : '') : '';
+      (app.running ? ' · ' + T(app.audioPaced ? 'passo guidato dall’audio' : sink.available ? 'audio non attivo (tocca la pagina)' : 'senza audio') : '') +
+      (app.running ? ' · ' + timingInfo(ts - ui.statT) : '') : '';
     ui.statFrames = 0;
+    ui.statRaf = 0;
+    ui.statUnder = sink.underruns;
     ui.statT = ts;
   }
 }

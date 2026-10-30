@@ -166,6 +166,14 @@ with sync_playwright() as p:
     pg.tap("#tkb")
     check(pg.evaluate("() => document.getElementById('vk').checked && document.getElementById('vkeys').classList.contains('on')") and pg.get_attribute("#tkb", "aria-pressed") == "true",
           "«Tastiera»: compare la tastiera della console (e la casella del pannello e' spuntata)")
+    tp, vk = box(pg, "#tpad"), box(pg, "#vkeys")
+    check(pg.evaluate("() => document.getElementById('play').contains(document.getElementById('vkeys'))") and tp["b"] - 1 <= vk["y"] <= tp["b"] + 30,
+          "«Tastiera»: sta nell'area di gioco, subito sotto croce e fuoco (%.0f -> %.0f)" % (tp["b"], vk["y"]))
+    check(vk["b"] <= 915 and vk["y"] >= 0, "verticale: la tastiera si vede tutta senza scorrere la pagina (fondo a %.0f su 915)" % vk["b"])
+    stats = pg.inner_text("#stats")
+    check("ridisegni:" in stats and "/s" in stats, "statistiche: ridisegni al secondo (%s)" % stats)
+    if pg.evaluate("() => !!window.o2web.sink.ctx"):
+        check("audio a vuoto:" in stats and " Hz, ritardo " in stats, "statistiche: audio a vuoto, frequenza e ritardo dell'audio")
     pg.tap("#tkb")
     check(not pg.evaluate("() => document.getElementById('vkeys').classList.contains('on')") and pg.get_attribute("#tkb", "aria-pressed") == "false", "«Tastiera» di nuovo: nascosta")
 
@@ -174,6 +182,7 @@ with sync_playwright() as p:
     check(joy(pg) == [UP, 0], "dito giu' prima di spegnere i comandi")
     choose(pg, "#tmode", "off")
     check(not visible(pg, "#tpad") and joy(pg) == [0, 0], "«Mai»: comandi nascosti e joystick rilasciato %s" % joy(pg))
+    check(not pg.evaluate("() => document.getElementById('play').contains(document.getElementById('vkeys'))"), "«Mai»: la tastiera della console torna al suo posto in fondo alla colonna")
     check(pg.evaluate("() => window.o2web.fullTarget().id") == "stage", "«Mai»: lo schermo intero torna quello del solo schermo")
     f.lift(1)
     choose(pg, "#tmode", "auto")
@@ -193,12 +202,8 @@ with sync_playwright() as p:
         check(visible(pg, "#tdir") and visible(pg, "#tfire"), "schermo intero: croce e fuoco visibili")
         pg.evaluate("() => document.exitFullscreen()")
         pg.wait_for_function("() => !document.fullscreenElement", timeout=3000)
-        try:      # l'evento fullscreenchange arriva subito dopo
-            pg.wait_for_function("() => !document.getElementById('play').contains(document.getElementById('vkeys'))", timeout=2000)
-            back = True
-        except Exception:
-            back = False
-        check(back, "uscendo dallo schermo intero la tastiera torna al suo posto")
+        settle(pg, 5)      # l'evento fullscreenchange arriva subito dopo
+        check(pg.evaluate("() => document.getElementById('play').contains(document.getElementById('vkeys'))"), "uscendo dallo schermo intero, con i comandi a tocco, la tastiera resta vicino ai comandi")
     else:
         print("INFO  schermo intero non disponibile nel browser di prova: controllato solo il bersaglio (#play)")
     pg.tap("#tkb")
@@ -228,6 +233,13 @@ with sync_playwright() as p:
     f.press(1, td["x"] + td["w"] / 2 + td["w"] * 0.4, td["y"] + td["h"] / 2)
     check(joy(pg) == [RIGHT, 0], "orizzontale: braccio destro della croce = destra %s" % joy(pg))
     f.lift(1)
+    pg.wait_for_function("() => /redraws: /.test(document.getElementById('stats').textContent)", timeout=5000)
+    check("redraws:" in pg.inner_text("#stats"), "inglese: statistiche con «redraws» (%s)" % pg.inner_text("#stats"))
+    pg.tap("#tkb")
+    settle(pg)
+    vk = box(pg, "#vkeys")
+    check(vk["y"] >= -1 and vk["b"] <= 412 + 1, "orizzontale: «Keyboard» porta la tastiera in vista (%.0f-%.0f)" % (vk["y"], vk["b"]))
+    pg.tap("#tkb") if box(pg, "#tkb")["y"] >= 0 else pg.evaluate("() => document.getElementById('tkb').click()")
     ctx.close()
 
     # ================================================================ computer (niente tocco): come prima
@@ -235,6 +247,7 @@ with sync_playwright() as p:
     check(not pg.evaluate("() => matchMedia('(pointer: coarse)').matches"), "computer: niente schermo tattile")
     check(not pg.evaluate("() => document.body.classList.contains('touch-on')") and not visible(pg, "#tpad"), "computer: i comandi a tocco non compaiono")
     check(pg.evaluate("() => window.o2web.fullTarget().id") == "stage", "computer: lo schermo intero resta quello del solo schermo")
+    check(not pg.evaluate("() => document.getElementById('play').contains(document.getElementById('vkeys'))"), "computer: la tastiera della console resta al suo posto in fondo alla colonna")
     check(no_hscroll(pg), "computer: nessuno scorrimento orizzontale")
     choose(pg, "#tmode", "on")
     check(visible(pg, "#tpad"), "computer, «Sempre»: i comandi a tocco compaiono anche senza schermo tattile")

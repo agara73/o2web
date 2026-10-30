@@ -231,6 +231,8 @@ body.touch-on #stage { height: min(80vw, calc(100vh - 290px)); min-height: 200px
 #play:fullscreen { width: 100vw; height: 100vh; box-sizing: border-box; padding: 8px; background: #000; display: flex; flex-direction: column; overflow: auto; }
 #play:fullscreen #stage { flex: 1 1 auto; height: auto; min-height: 120px; border: 0; }
 #play:fullscreen #vkeys { flex: none; }
+#play > #vkeys { margin-top: 8px; }
+body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
 /* telefono in orizzontale: croce a sinistra, schermo al centro, fuoco a destra */
 @media (orientation: landscape) and (max-height: 560px) {
   body.touch-on main { grid-template-columns: minmax(0, 1fr); }      /* il pannello va sotto: tutta la larghezza a croce, schermo e fuoco */
