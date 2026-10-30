@@ -120,6 +120,9 @@ if [ -n "$O2_VPLIST" ] && [ -f "$O2_VPLIST" ]; then
 else
   echo "O2_VPLIST non impostata (file HTML della lista delle cartucce): prova della lettura della lista saltata"
 fi
+echo "== 9r. tappa 8 - joystick a tocco (touch.js): direzioni e sequenze di dita contro il riferimento Python indipendente (hw/touch_ref.py)"
+python3 -I "$HERE/touch_vectors.py" "$WORK/touch_vec.json" > /dev/null
+tl 1 node "$HERE/test_touch.js" "$WORK/touch_vec.json"
 echo "== 10. file HTML unico (build) e prova nel browser vero (si salta se manca Playwright)"
 node "$ROOT/tools/build.js" "$WORK/o2web.html"
 if python3 -c "import playwright" 2>/dev/null; then
@@ -137,8 +140,8 @@ if [ "$2" = "--mutation" ]; then
   echo "== 11. prova di mutazione: CPU (cache dei casi rapidi + replay) e moduli delle tappe 2 e 3"
   tl 1 python3 -I "$HERE/difftest.py" --quick --save-cache "$WORK/cache_quick.json"
   python3 -I "$HERE/mutate.py" "$WORK/cache_quick.json" "$WORK/replay" "$DUMPS" --n 0
-  for t in cartmap sha256 unzip console vdc audio input zipstore library session webaudio app look machines screen photos netfetch covers ef934x charedit i18n chessmod sha1 gamenames gamelist vplist preview previews; do
-    python3 -I "$HERE/mutate2.py" $t --dumps "$DUMPS" --stress "$WORK/stress.json" --rec "$WORK/line" --audio-ref "$WORK/audio" --look-ref "$WORK/look" --ef-ref "$WORK/ef.json" --prev-ref "$WORK/prev" --vp-vec "$WORK/vp_vec.json" | head -2
+  for t in cartmap sha256 unzip console vdc audio input zipstore library session webaudio app look machines screen photos netfetch covers ef934x charedit i18n chessmod sha1 gamenames gamelist vplist preview previews touch; do
+    python3 -I "$HERE/mutate2.py" $t --dumps "$DUMPS" --stress "$WORK/stress.json" --rec "$WORK/line" --audio-ref "$WORK/audio" --look-ref "$WORK/look" --ef-ref "$WORK/ef.json" --prev-ref "$WORK/prev" --vp-vec "$WORK/vp_vec.json" --touch-vec "$WORK/touch_vec.json" | head -2
   done
   if [ -n "$Z80_LIB" ] && [ -d "$Z80_LIB/z80" ]; then
     python3 -I "$HERE/mutate2.py" z80 --dumps "$DUMPS" --stress "$WORK/stress.json" --rec "$WORK/line" --z80-ref "$WORK/z80rec" --n 250 | head -2

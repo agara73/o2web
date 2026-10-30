@@ -2,7 +2,7 @@
 // (c) 2026 by Agara73 - SPDX-License-Identifier: GPL-3.0-only - emulatore Odyssey 2 / Videopac per browser
 //
 // input.js - ingressi della console: tastiera del computer, joystick 1 e 2 (tasti configurabili), gamepad (Gamepad API), tastiera a
-// schermo. Solo logica pura (nessun DOM): la pagina (ui.js) gli passa eventi gia' ridotti a oggetti semplici ({code, key, ctrlKey...}),
+// schermo, joystick a tocco del giocatore 1 (bit gia' calcolati da touch.js, tappa 8). Solo logica pura (nessun DOM): la pagina (ui.js) gli passa eventi gia' ridotti a oggetti semplici ({code, key, ctrlKey...}),
 // cosi' tutto si prova in Node (test/test_input.js).
 //
 // Console: tastiera a matrice (riga r, colonna c) con codice 8r + c, che e' anche l'indice del carattere nel set del chip video (DA
@@ -182,6 +182,7 @@ class InputState {
     this.virtual = new Set();         // indici dei tasti premuti sulla tastiera a schermo
     this.pad = [0, 0];                // bit dei due gamepad
     this.padKeys = new Set();         // tasti della console premuti dai gamepad
+    this.touch = 0;                   // bit del joystick a tocco (giocatore 1)
     this.swap = false;                // scambio dei comandi: i tasti e il gamepad del giocatore 1 muovono il joystick 2 e viceversa (giochi a turni giocati da soli)
   }
 
@@ -224,7 +225,10 @@ class InputState {
   // acceso: tutto cio' che e' del giocatore 1 (tasti, gamepad) va al joystick 2 e viceversa; vale subito, anche per i tasti gia' premuti. La tastiera della console non cambia.
   setSwap(on) { this.swap = !!on; }
 
-  releaseAll() { this.down.clear(); this.virtual.clear(); this.pad = [0, 0]; this.padKeys.clear(); }
+  releaseAll() { this.down.clear(); this.virtual.clear(); this.pad = [0, 0]; this.padKeys.clear(); this.touch = 0; }
+
+  // bit del joystick a tocco (touch.js): vanno al joystick 1 e passano dallo scambio come i tasti del giocatore 1
+  setTouch(bits) { this.touch = Number.isInteger(bits) ? bits & 0x1F : 0; }
 
   setVirtual(idx, isDown) {
     if (!Number.isInteger(idx) || idx < 0 || idx > 47 || idx === 11) return;
@@ -240,7 +244,7 @@ class InputState {
   // ingressi da dare alla console: {rows: Uint8Array(8) (tastiera a matrice), joy: [bit joystick 1, bit joystick 2]}
   snapshot() {
     const rows = new Uint8Array(8);
-    const joy = [this.pad[0], this.pad[1]];
+    const joy = [this.pad[0] | this.touch, this.pad[1]];
     const add = (kb) => { rows[kb >> 3] |= 1 << (kb & 7); };
     for (const v of this.down.values()) {
       if (v.kb >= 0) add(v.kb);

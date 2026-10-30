@@ -404,6 +404,44 @@ function withDumps(dumps) {
   ok(t.snapshot().joy[0] === 0 && t.snapshot().joy[1] === 0x0F, 'scambio: quattro direzioni del giocatore 1 -> joystick 2 (0x0F), joystick 1 vuoto');
 }
 
+// ---- joystick a tocco (tappa 8): bit gia' calcolati da touch.js, al joystick 1, insieme alle altre sorgenti e allo scambio
+{
+  const J = I.JOY_BITS;
+  const s = new I.InputState();
+  ok(s.touch === 0 && s.snapshot().joy[0] === 0, 'tocco: spento all\'inizio');
+  s.setTouch(J.up | J.fire);
+  let sn = s.snapshot();
+  ok(sn.joy[0] === (J.up | J.fire) && sn.joy[1] === 0, 'tocco: su + fuoco al joystick 1, joystick 2 vuoto');
+  ok(sn.rows.every((r) => r === 0), 'tocco: nessun tasto della console');
+  s.keyDown(ev('ArrowLeft'));                       // preset predefinito: il giocatore 1 usa le frecce
+  sn = s.snapshot();
+  ok(sn.joy[0] === (J.up | J.fire | J.left) && sn.joy[1] === 0, 'tocco e tastiera del giocatore 1 insieme: i bit si sommano (' + sn.joy[0] + ')');
+  s.keyUp(ev('ArrowLeft'));
+  s.keyDown(ev('Numpad6'));                         // giocatore 2 dal tastierino
+  sn = s.snapshot();
+  ok(sn.joy[0] === (J.up | J.fire) && sn.joy[1] === J.right, 'tocco al giocatore 1, tastierino al giocatore 2: ognuno al suo joystick');
+  s.keyUp(ev('Numpad6'));
+  s.setPads({1: {buttons: [{pressed: false}], axes: [0, 1]}, 2: null});
+  sn = s.snapshot();
+  ok(sn.joy[0] === (J.up | J.fire | J.down), 'tocco e gamepad 1 insieme: i bit si sommano (' + sn.joy[0] + ')');
+  s.setPads({1: null, 2: null});
+  s.setSwap(true);
+  sn = s.snapshot();
+  ok(sn.joy[0] === 0 && sn.joy[1] === (J.up | J.fire), 'tocco con lo scambio acceso: va al joystick 2');
+  s.setSwap(false);
+  s.setTouch(0xFF);
+  ok(s.touch === 0x1F && s.snapshot().joy[0] === 0x1F, 'setTouch: solo i 5 bit del joystick');
+  for (const [v, what] of [[1.5, 'decimale'], ['3', 'stringa'], [NaN, 'NaN'], [undefined, 'undefined'], [null, 'null']]) {
+    s.setTouch(J.fire); s.setTouch(v);
+    ok(s.touch === 0, 'setTouch(' + what + '): rilasciato');
+  }
+  s.setTouch(J.left);
+  s.releaseAll();
+  ok(s.touch === 0 && s.snapshot().joy[0] === 0, 'releaseAll rilascia anche il tocco');
+  s.setTouch(J.right); s.setBindings(I.defaultBindings());
+  ok(s.snapshot().joy[0] === J.right, 'setBindings non tocca il tocco (non e\' un tasto)');
+}
+
 function main() {
   if (process.argv[2]) withDumps(process.argv[2]);
   if (fails) { console.log('FALLITI ' + fails + ' controlli (' + passes + ' ok)'); process.exit(1); }
