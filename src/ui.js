@@ -92,7 +92,10 @@ function stamp() {
 
 // ---------------------------------------------------------------- applicazione
 const AC = window.AudioContext || window.webkitAudioContext || null;
-const sink = new AudioOutput({Ctx: AC});
+// prova della tappa 8: «?audiolat=0.01» chiede al browser un ritardo dell'audio piu' basso di 'interactive' (in secondi); webaudio.js
+// accetta solo numeri fra 0 e 1 e, se il browser lo rifiuta, ripiega su 'interactive'
+const AUDIO_LAT = (/(?:^|[?&#])audiolat=([0-9.]+)/i.exec(String(location.search || '') + String(location.hash || '')) || [])[1];
+const sink = new AudioOutput({Ctx: AC, latencyHint: AUDIO_LAT === undefined ? undefined : Number(AUDIO_LAT)});
 const app = new App({onMessage: log, sink, fallbackCharset: new Uint8Array(charsetOwn.build()), fallbackEfCharset: new Uint8Array(charsetEfOwn.build()), onNet: () => renderNet()});
 let screen = null;
 
@@ -1094,6 +1097,11 @@ function timingInfo(dt) {
     const lat = typeof c.outputLatency === 'number' && c.outputLatency > 0 ? c.outputLatency : typeof c.baseLatency === 'number' ? c.baseLatency : NaN;
     s += ' · ' + T('audio a vuoto: {n}/s · anticipo {lead} ms · audio {rate} Hz, ritardo {lat} ms',
       {n: per(sink.underruns - ui.statUnder), lead: Math.round(app.pacer.lead * 1000), rate: c.sampleRate, lat: Number.isFinite(lat) ? Math.round(lat * 1000) : '?'});
+    if (typeof sink.latencyHint === 'number') {
+      const ms = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 1000) : '?');
+      s += ' · ' + (sink.hintRefused ? T('prova: {h} ms rifiutato dal browser', {h: ms(sink.latencyHint)})
+        : T('prova: chiesti {h} ms, interno {b} ms, uscita {o} ms', {h: ms(sink.latencyHint), b: ms(c.baseLatency), o: ms(c.outputLatency)}));
+    }
   }
   return s;
 }

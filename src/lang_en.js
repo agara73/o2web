@@ -133,6 +133,8 @@ module.exports = {
   "senza audio": "no audio",
   "ridisegni: {raf}/s": "redraws: {raf}/s",
   "audio a vuoto: {n}/s · anticipo {lead} ms · audio {rate} Hz, ritardo {lat} ms": "audio ran dry: {n}/s · lead {lead} ms · audio {rate} Hz, latency {lat} ms",
+  "prova: {h} ms rifiutato dal browser": "test: {h} ms refused by the browser",
+  "prova: chiesti {h} ms, interno {b} ms, uscita {o} ms": "test: asked {h} ms, internal {b} ms, output {o} ms",
   "ritmo: orologio della pagina, corretto dall’audio": "pace: page clock, corrected by the audio",
   "riconosciuto, {label}": "recognised, {label}",
   "impronta non nota: controlla che sia quello giusto": "unknown fingerprint: check that it is the right one",

@@ -110,7 +110,32 @@ ok(none.queued() === 0, 'senza contesto non fa niente');
   ok(f.ctx.nodes[0].gain.calls.at(-1)[0] === 1 && f.ctx.nodes[0].gain.calls.at(-1)[2] === 0.01 && f.ctx.nodes[0].gain.calls.at(-1)[1] === 0, 'guadagno iniziale: pieno, costante 0,01 s');
   f.ctx.currentTime = 2.5; f.setVolume(0.25);
   ok(f.ctx.nodes[0].gain.calls.at(-1)[1] === 2.5 && f.ctx.nodes[0].gain.calls.at(-1)[0] === 0.25, 'il guadagno si programma all\'istante del contesto');
-  ok(f.ctx.opt.latencyHint === 'interactive', 'latenza interattiva');
+  ok(f.ctx.opt.latencyHint === 'interactive' && f.latencyHint === 'interactive' && f.hintRefused === false, 'latenza interattiva');
+  // ritardo chiesto al browser (prova della tappa 8, «?audiolat=»): numeri fra 0 (escluso) e 1, altrimenti 'interactive'
+  for (const h of [0.01, 1, 1e-6, 0.5]) {
+    const o = new AudioOutput({Ctx: FakeCtx, latencyHint: h}); o.start();
+    ok(o.latencyHint === h && o.ctx.opt.latencyHint === h && o.hintRefused === false, 'latenza chiesta ' + h + ' passata al contesto');
+  }
+  for (const h of [0, -0.01, 1.0001, NaN, Infinity, '0.01', 'playback', null, undefined, {}, true]) {
+    const o = new AudioOutput({Ctx: FakeCtx, latencyHint: h}); o.start();
+    ok(o.latencyHint === 'interactive' && o.ctx.opt.latencyHint === 'interactive', 'latenza chiesta ' + String(h) + ' non valida: interattiva');
+  }
+  // il browser rifiuta il numero: si ripiega su 'interactive' e lo si segna
+  const made = [];
+  class NoNum extends FakeCtx { constructor(o) { if (typeof o.latencyHint === 'number') throw new Error('numero rifiutato'); super(o); made.push(o.latencyHint); } }
+  const nn0 = new AudioOutput({Ctx: NoNum, latencyHint: 0.01}); nn0.start();
+  ok(nn0.hintRefused === true && nn0.ctx.opt.latencyHint === 'interactive' && nn0.latencyHint === 0.01 && made.length === 1, 'numero rifiutato dal browser: interattiva, segnato');
+  const nn1 = new AudioOutput({Ctx: NoNum}); nn1.start();
+  ok(nn1.hintRefused === false && nn1.ctx.opt.latencyHint === 'interactive', 'senza numero: nessun rifiuto');
+  // se fallisce anche 'interactive' l'errore arriva a chi chiama
+  class Broken { constructor() { throw new Error('audio rotto'); } }
+  let be = '';
+  try { new AudioOutput({Ctx: Broken}).start(); } catch (e) { be = e.message; }
+  ok(be === 'audio rotto', 'contesto che non si crea: errore (' + be + ')');
+  be = '';
+  const bk = new AudioOutput({Ctx: Broken, latencyHint: 0.02});
+  try { bk.start(); } catch (e) { be = e.message; }
+  ok(be === 'audio rotto' && bk.hintRefused === true && bk.ctx === null, 'numero rifiutato e poi anche interattiva: errore (' + be + ')');
   // contesto gia' in esecuzione: nessun resume
   let resumes = 0;
   class RunCtx extends FakeCtx { constructor(o) { super(o); this.state = 'running'; } resume() { resumes++; return super.resume(); } }
