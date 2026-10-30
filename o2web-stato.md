@@ -618,6 +618,7 @@ Rischio: senza la ROM da 8 KB non si puo' vedere giocare a scacchi; il risultato
 **Decisioni.** Uso su computer, iPhone e Android. Mobile come PWA installabile, se possibile; niente app nativa per ora. Google Drive come scambio tra dispositivi, con login Google: stati e sessioni si sincronizzano da soli dopo il login; BIOS, ROM e set di caratteri stanno nel Drive, cosi' dopo il login si ritrova la sessione completa su ogni dispositivo. Il Drive c'e' SOLO nella versione ospitata, con attivazione volontaria, mai nella versione da disco. Sviluppo su Claude Code; claude.ai resta per discussioni e decisioni.
 
 **Tappe proposte** (numerazione provvisoria, da confermare): **P** pubblicazione su GitHub + Vercel (prima di tutto: serve un dominio stabile e per provare la configurazione di Vercel, mai provata); **8** mobile web (responsive, touch, gamepad); **9** PWA (manifest, service worker, icone originali); **10** Drive (login, sincronizzazione, conflitti). La tappa 6 (extra: cartucce con RAM extra, The Voice, ecc.) resta aperta e indipendente.
+**Confermato dall'utente il 30/10/2026:** tappe 8, 9, 10 in quest'ordine (domanda aperta 6 risolta).
 
 **Progetto tecnico proposto (da confermare prima di costruire).**
 - *Due modalita' dalla stessa build:* (a) file unico da disco, offline e senza account, com'e' oggi; (b) versione ospitata su Vercel con PWA e Drive. Service worker e login Google non funzionano da `file://`.
