@@ -5,10 +5,7 @@
 // tanti AudioBuffer, senza buchi e senza sovrapposizioni. Nessun worklet: bastano le sorgenti a buffer. L'oggetto e' separato dal
 // campionamento (audio.js, deterministico) proprio perche' qui entra l'orologio del browser: serve solo a sapere quanto audio e'
 // in coda (queued()) per far correre l'emulazione al passo dell'audio (framesToRun in audio.js).
-//   new AudioOutput({Ctx, lead, latencyHint})   Ctx: costruttore AudioContext (iniettabile nelle prove); lead: anticipo minimo in
-//                secondi; latencyHint: ritardo chiesto al browser in secondi (prova della tappa 8, «?audiolat=» nell'indirizzo), un numero
-//                maggiore di 0 e al massimo 1, altrimenti 'interactive'; se il browser rifiuta il numero si ripiega su 'interactive'
-//                (hintRefused = true)
+//   new AudioOutput({Ctx, lead})   Ctx: costruttore AudioContext (iniettabile nelle prove); lead: anticipo minimo in secondi
 //   start()      crea/riprende il contesto (da chiamare in un gesto dell'utente: criteri di riproduzione automatica); ritorna la frequenza
 //   push(pcm)    programma un blocco di campioni (Float32Array) subito dopo quello precedente
 //   queued()     secondi di audio programmati e non ancora suonati
@@ -22,9 +19,6 @@ class AudioOutput {
     opts = opts || {};
     this.Ctx = opts.Ctx || null;
     this.lead = opts.lead === undefined ? 0.03 : opts.lead;
-    const h = opts.latencyHint;
-    this.latencyHint = typeof h === 'number' && h > 0 && h <= 1 ? h : 'interactive';
-    this.hintRefused = false;
     this.ctx = null;
     this.gain = null;
     this.next = 0;                        // istante (del contesto) in cui finisce l'audio gia' programmato
@@ -44,13 +38,7 @@ class AudioOutput {
   start() {
     if (!this.Ctx) throw new Error('l’audio del browser non e’ disponibile');
     if (!this.ctx) {
-      try {
-        this.ctx = new this.Ctx({latencyHint: this.latencyHint});
-      } catch (e) {
-        if (this.latencyHint === 'interactive') throw e;
-        this.hintRefused = true;
-        this.ctx = new this.Ctx({latencyHint: 'interactive'});
-      }
+      this.ctx = new this.Ctx({latencyHint: 'interactive'});
       this.gain = this.ctx.createGain();
       let tail = this.gain;
       if (this.ctx.createBiquadFilter) {

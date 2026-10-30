@@ -5,9 +5,8 @@ tattile, 412 x 915 in verticale e 915 x 412 in orizzontale) e tocchi veri del br
 rilascio): i comandi a tocco compaiono da soli, la croce e il fuoco muovono davvero il joystick 1 della console con un gioco in corso
 (anche insieme, anche con lo scambio 1-2), lo stick che segue il dito, il tasto della tastiera della console, le scelte «Comandi a
 tocco» e «Joystick a tocco», nessuno scorrimento orizzontale, la disposizione in verticale e in orizzontale, i testi in inglese; sul
-computer (niente tocco) i comandi non compaiono e lo schermo intero resta quello di prima. Prova del ritardo dell'audio chiesto al
-browser («?audiolat=»: numero passato all'audio e voce nelle statistiche; senza, o fuori limite, latenza interattiva). Nessun errore in
-console, nessuna richiesta di rete. Gli screenshot sono della sola zona dei comandi a tocco (nessuna grafica di gioco) e restano in OUTDIR."""
+computer (niente tocco) i comandi non compaiono e lo schermo intero resta quello di prima. Nessun errore in console, nessuna richiesta
+di rete. Gli screenshot sono della sola zona dei comandi a tocco (nessuna grafica di gioco) e restano in OUTDIR."""
 import argparse, os, sys
 from playwright.sync_api import sync_playwright
 
@@ -52,22 +51,14 @@ def no_hscroll(pg):
     return pg.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
 
 
-def open_page(b, w, h, mobile, lang, extra=""):
+def open_page(b, w, h, mobile, lang):
     ctx = b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2.625 if mobile else 1, is_mobile=mobile, has_touch=mobile)
     pg = ctx.new_page()
     pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.on("request", lambda r: requests.append(r.url) if not r.url.startswith(("file:", "data:", "blob:")) else None)
-    pg.goto(URL + "?offline&lang=" + lang + extra)
+    pg.goto(URL + "?offline&lang=" + lang)
     return ctx, pg
-
-
-def audio_stats(pg):
-    """gioco in corso, un tocco sullo schermo per accendere l'audio, poi la riga delle statistiche con l'audio attivo"""
-    start_game(pg)
-    pg.click("#stage")
-    pg.wait_for_function("() => /anticipo \\d+ ms/.test(document.getElementById('stats').textContent)", timeout=8000)
-    return pg.inner_text("#stats")
 
 
 def start_game(pg):
@@ -269,28 +260,6 @@ with sync_playwright() as p:
     check(joy(pg) == [0, 0], "mouse alzato: fermo")
     choose(pg, "#tmode", "auto")
     check(not visible(pg, "#tpad"), "computer, di nuovo «Automatici»: nascosti")
-    ctx.close()
-
-    # ================================================================ prova del ritardo dell'audio chiesto al browser («?audiolat=»)
-    ctx, pg = open_page(b, 1280, 1000, False, "it")
-    st = audio_stats(pg)
-    check(pg.evaluate("() => window.o2web.sink.latencyHint") == "interactive" and "prova:" not in st, "senza «?audiolat»: latenza interattiva, nessuna voce di prova (%s)" % st)
-    ctx.close()
-    ctx, pg = open_page(b, 1280, 1000, False, "it", "&audiolat=0.01")
-    st = audio_stats(pg)
-    check(pg.evaluate("() => window.o2web.sink.latencyHint") == 0.01, "«?audiolat=0.01»: chiesti 10 ms al browser")
-    check("prova: chiesti 10 ms, interno " in st or "prova: 10 ms rifiutato dal browser" in st, "«?audiolat=0.01»: la voce di prova nelle statistiche (%s)" % st)
-    ctx.close()
-    ctx, pg = open_page(b, 1280, 1000, False, "en", "&audiolat=0.02")
-    start_game(pg)
-    pg.click("#stage")
-    pg.wait_for_function("() => /lead \\d+ ms/.test(document.getElementById('stats').textContent)", timeout=8000)
-    st = pg.inner_text("#stats")
-    check("test: asked 20 ms, internal " in st or "test: 20 ms refused by the browser" in st, "inglese: voce di prova tradotta (%s)" % st)
-    ctx.close()
-    ctx, pg = open_page(b, 1280, 1000, False, "it", "&audiolat=5")
-    st = audio_stats(pg)
-    check(pg.evaluate("() => window.o2web.sink.latencyHint") == "interactive" and "prova:" not in st, "«?audiolat=5» (fuori limite): latenza interattiva, nessuna voce di prova")
     ctx.close()
     b.close()
 
