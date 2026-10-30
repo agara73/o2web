@@ -130,6 +130,7 @@ if python3 -c "import playwright" 2>/dev/null; then
   tl 3 python3 -I "$HERE/browser_i18n.py" "$WORK/o2web.html" "$DUMPS" "$WORK/shots_i18n"
   tl 3 python3 -I "$HERE/browser_list.py" "$WORK/o2web.html" "$DUMPS" "$WORK/shots_list"
   tl 3 python3 -I "$HERE/browser_plate.py" "$WORK/o2web.html" "$DUMPS" "$WORK/shots_plate"
+  tl 3 python3 -I "$HERE/browser_mobile.py" "$WORK/o2web.html" "$DUMPS" "$WORK/shots_mobile"
 else
   echo "Playwright non installato: prova nel browser saltata"
 fi

@@ -206,6 +206,44 @@ ul.chips { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-w
 ul.chips li { display: inline-flex; align-items: center; gap: 6px; }
 ul.chips li.miss .txt { color: var(--warn); }
 @media (max-width: 520px) { .mrow figure.machine { flex-basis: 96px; } #plate { gap: 10px 12px; padding: 8px 10px 10px; } button.key { min-width: 58px; padding: 4px 8px 5px; } }
+/* comandi a tocco (tappa 8): compaiono solo con body.touch-on (schermo tattile, o scelta «Sempre»); sul computer la pagina resta com'era */
+#tpad { display: none; }
+body.touch-on #tpad { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; user-select: none; -webkit-user-select: none; touch-action: none; }
+#tdir { width: 156px; height: 156px; flex: none; position: relative; touch-action: none; }
+#tdir svg { display: block; width: 100%; height: 100%; }
+#tdir .arm { fill: #2a3040; stroke: #4a5266; stroke-width: 2; }
+#tdir .arm.on { fill: var(--acc); }
+#tdir .hub { fill: #1d222e; stroke: #4a5266; stroke-width: 2; }
+#tdir .float-hint { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; text-align: center; padding: 10px; color: var(--dim); font-size: .8rem; pointer-events: none; }
+#tdir.float { width: auto; flex: 1; max-width: 60%; height: 170px; border: 1px dashed var(--line); border-radius: 10px; }
+#tdir.float svg { display: none; }
+#tdir.float .float-hint { display: flex; }
+#tdir.float.act .float-hint { display: none; }
+#tknob { position: absolute; width: 96px; height: 96px; margin: -48px 0 0 -48px; border: 2px solid var(--acc); border-radius: 50%; display: none; pointer-events: none; }
+#tknob::after { content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: var(--acc); opacity: .55; transform: translate(var(--kx, 0), var(--ky, 0)); }
+#tdir.float.act #tknob { display: block; }
+#tright { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: none; }
+#tfire { width: 112px; height: 112px; border-radius: 50%; font-weight: 700; font-size: 1rem; letter-spacing: .06em; color: #fff; background: radial-gradient(circle at 40% 35%, #e0585e, #a62329); border: 2px solid #6c1317; border-bottom-width: 5px; touch-action: none; }
+#tfire.dn { filter: brightness(1.35); border-bottom-width: 2px; }
+#tkb { padding: 4px 10px; font-size: .82rem; }
+#tkb[aria-pressed=true] { border-color: var(--acc); color: var(--acc); }
+body.touch-on #stage { height: min(80vw, calc(100vh - 290px)); min-height: 200px; }
+#play:fullscreen { width: 100vw; height: 100vh; box-sizing: border-box; padding: 8px; background: #000; display: flex; flex-direction: column; overflow: auto; }
+#play:fullscreen #stage { flex: 1 1 auto; height: auto; min-height: 120px; border: 0; }
+#play:fullscreen #vkeys { flex: none; }
+/* telefono in orizzontale: croce a sinistra, schermo al centro, fuoco a destra */
+@media (orientation: landscape) and (max-height: 560px) {
+  body.touch-on main { grid-template-columns: minmax(0, 1fr); }      /* il pannello va sotto: tutta la larghezza a croce, schermo e fuoco */
+  body.touch-on #play { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "dir stage right" "kb kb kb"; align-items: center; gap: 4px 10px; }
+  body.touch-on #tpad { display: contents; }
+  body.touch-on #tdir { grid-area: dir; }
+  body.touch-on #tdir.float { width: 30vw; max-width: none; height: 70vh; }
+  body.touch-on #tright { grid-area: right; }
+  body.touch-on #stage { grid-area: stage; height: calc(100vh - 24px); min-height: 160px; }
+  body.touch-on #play > #vkeys { grid-area: kb; }
+  #play:fullscreen { display: grid; }
+  #play:fullscreen #stage { height: 100%; }
+}
 </style>
 </head>
 <body>
@@ -223,6 +261,7 @@ ul.chips li.miss .txt { color: var(--warn); }
 </header>
 <main>
   <section>
+    <div id="play">
     <div id="stage">
       <canvas id="screen" width="360" height="243" tabindex="0" aria-label="Schermo della console"></canvas>
       <div id="splash">
@@ -242,6 +281,24 @@ ul.chips li.miss .txt { color: var(--warn); }
         </ul>
       </div>
       <div id="toast" role="status"></div>
+    </div>
+    <div id="tpad" role="group" aria-label="Comandi a tocco">
+      <div id="tdir" aria-label="Joystick a tocco del giocatore 1">
+        <svg viewBox="0 0 156 156" aria-hidden="true" focusable="false">
+          <path class="arm" data-b="1" d="M57 8h42v44l-21 21-21-21z"/>
+          <path class="arm" data-b="2" d="M148 57v42h-44l-21-21 21-21z"/>
+          <path class="arm" data-b="4" d="M99 148h-42v-44l21-21 21 21z"/>
+          <path class="arm" data-b="8" d="M8 99v-42h44l21 21-21 21z"/>
+          <circle class="hub" cx="78" cy="78" r="14"/>
+        </svg>
+        <div class="float-hint">Appoggia il dito e trascinalo</div>
+        <div id="tknob"></div>
+      </div>
+      <div id="tright">
+        <button type="button" id="tkb" aria-pressed="false" title="Mostra o nasconde la tastiera della console (serve, per esempio, per scegliere il gioco nel menu del BIOS)">Tastiera</button>
+        <button type="button" id="tfire" aria-label="Fuoco del giocatore 1">Fuoco</button>
+      </div>
+    </div>
     </div>
     <div id="plate" role="group" aria-label="Comandi della console">
       <div class="pgrp"><span class="leg">Gioco</span><div class="pk">
@@ -457,6 +514,11 @@ ul.chips li.miss .txt { color: var(--warn); }
       <select id="pad2" data-dyn></select>
       <div class="dim" id="pad-info" data-dyn style="margin-top:4px"></div>
       <div class="row"><label><input type="checkbox" id="vk"> Tastiera a schermo</label></div>
+      <label class="f" for="tmode">Comandi a tocco (joystick e fuoco sullo schermo)</label>
+      <select id="tmode"><option value="auto">Automatici (se lo schermo &egrave; tattile)</option><option value="on">Sempre</option><option value="off">Mai</option></select>
+      <label class="f" for="tstick">Joystick a tocco</label>
+      <select id="tstick"><option value="cross">Croce fissa</option><option value="float">Segue il dito</option></select>
+      <div class="dim" style="margin-top:4px">Il joystick a tocco muove il joystick 1 (con &laquo;Scambia comandi 1-2&raquo; il 2). Queste due scelte non si ricordano alla prossima apertura.</div>
     </details>
     <details id="d-chars">
       <summary>Editor dei caratteri (set GPL e personalizzati)</summary>

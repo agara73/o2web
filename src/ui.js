@@ -8,6 +8,7 @@ const {App, layoutSize} = require('./app.js');
 const {AudioOutput} = require('./webaudio.js');
 const {Screen} = require('./screen.js');
 const I = require('./input.js');
+const TouchMod = require('./touch.js');
 const S = require('./session.js');
 const {folderList} = require('./library.js');
 const Look = require('./look.js');
@@ -730,11 +731,19 @@ function renderAll() {
   $('info').textContent = running ? T('BIOS: {name}', {name: b ? b.display : '?'}) + ' · ' + (g ? T('gioco: {name} ({size}, mappa {map})', {name: g.display, size: kb(g.size), map: g.map.kind}) : T('nessuna cartuccia')) +
     ' · ' + app.settings.standard : '';
   relayout();
+  // comandi a tocco: quando un gioco parte, se schermo e comandi non si vedono tutti (telefono in orizzontale: la testata li spinge giu')
+  // la pagina scorre fino a loro, una volta per avvio
+  if (running && touch.on && !ui.playShown) {
+    ui.playShown = true;
+    const r = $('play').getBoundingClientRect();
+    if (r.top < 0 || r.bottom > window.innerHeight) $('play').scrollIntoView({block: 'start'});
+  }
+  if (!running) ui.playShown = false;
 }
 
 function relayout() {
   const st = $('stage');
-  const full = !!document.fullscreenElement;
+  const full = document.fullscreenElement === st;                 // con i comandi a tocco lo schermo intero e' di #play: conta lo spazio di #stage
   const L = layoutSize(full ? window.innerWidth : st.clientWidth - 2, full ? window.innerHeight : st.clientHeight - 2, app.settings.scale, app.settings.aspect, app.settings.integer);
   const c = $('screen');
   c.style.width = L.w + 'px';
@@ -751,8 +760,10 @@ function togglePause() {
 function doReset() {
   if (app.resetConsole()) toast('Reset console');
 }
+// sul computer va a schermo intero solo lo schermo; con i comandi a tocco anche croce, fuoco e tastiera (si gioca col telefono)
+function fullTarget() { return touch.on ? $('play') : $('stage'); }
 function toggleFull() {
-  const st = $('stage');
+  const st = fullTarget();
   if (document.fullscreenElement) { document.exitFullscreen(); return; }
   if (!st.requestFullscreen) { log('Lo schermo intero non e’ disponibile in questo browser.', 'warn'); return; }
   const p = st.requestFullscreen();
@@ -806,8 +817,8 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
   if (app.input.keyUp(e) && app.running && !typingTarget(e.target)) e.preventDefault();
 }, true);
-window.addEventListener('blur', () => app.input.releaseAll());
-document.addEventListener('visibilitychange', () => { if (document.hidden) app.input.releaseAll(); });
+window.addEventListener('blur', () => { app.input.releaseAll(); touchRelease(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { app.input.releaseAll(); touchRelease(); } });
 
 // ---------------------------------------------------------------- tastiera a schermo
 function buildVKeys() {
@@ -833,6 +844,63 @@ function buildVKeys() {
     box.appendChild(r);
   }
 }
+
+// ---------------------------------------------------------------- comandi a tocco (tappa 8): croce o stick che segue il dito, fuoco, tastiera
+// La logica sta in touch.js (provata in Node); qui solo eventi pointer, posizione della croce e aspetto. Le due scelte (quando
+// mostrarli, tipo di joystick) non si ricordano fra una visita e l'altra (niente localStorage).
+const coarse = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
+const touch = {pad: new TouchMod.TouchPad('cross'), mode: 'auto', on: false};
+const FLOAT_RADIUS = 48;
+function touchWanted() { return touch.mode === 'on' || (touch.mode === 'auto' && !!(coarse && coarse.matches)); }
+function touchSync() {
+  const b = touch.pad.bits();
+  app.input.setTouch(b);
+  for (const a of document.querySelectorAll('#tdir .arm')) a.classList.toggle('on', !!(b & Number(a.dataset.b)));
+  $('tfire').classList.toggle('dn', !!(b & TouchMod.FIRE));
+  const d = touch.pad.dir, el = $('tdir');
+  el.classList.toggle('act', !!d);
+  if (d && touch.pad.mode === 'float') {
+    const r = el.getBoundingClientRect(), k = $('tknob');
+    k.style.left = (d.cx - r.left) + 'px';
+    k.style.top = (d.cy - r.top) + 'px';
+    const dx = d.x - d.cx, dy = d.y - d.cy, len = Math.hypot(dx, dy), f = len > FLOAT_RADIUS ? FLOAT_RADIUS / len : 1;
+    k.style.setProperty('--kx', (dx * f).toFixed(1) + 'px');
+    k.style.setProperty('--ky', (dy * f).toFixed(1) + 'px');
+  }
+}
+function touchRelease() { touch.pad.reset(); touchSync(); }
+function applyTouch() {
+  touch.on = touchWanted();
+  document.body.classList.toggle('touch-on', touch.on);
+  $('tdir').classList.toggle('float', touch.pad.mode === 'float');
+  if (!touch.on) touchRelease();
+  relayout();
+}
+function touchGeometry() {
+  const r = $('tdir').getBoundingClientRect();
+  touch.pad.setGeometry(r.left + r.width / 2, r.top + r.height / 2, touch.pad.mode === 'float' ? FLOAT_RADIUS : Math.min(r.width, r.height) / 2);
+}
+function grab(el, ev) {
+  ev.preventDefault();
+  unlockAudio();
+  try { if (el.setPointerCapture) el.setPointerCapture(ev.pointerId); } catch (e) { /* evento costruito a mano (prove): niente cattura */ }
+}
+$('tdir').addEventListener('pointerdown', (ev) => { grab($('tdir'), ev); touchGeometry(); touch.pad.dirDown(ev.pointerId, ev.clientX, ev.clientY); touchSync(); });
+$('tdir').addEventListener('pointermove', (ev) => {
+  if (!touch.pad.isDown(ev.pointerId)) return;
+  ev.preventDefault();
+  touch.pad.move(ev.pointerId, ev.clientX, ev.clientY);
+  touchSync();
+});
+$('tfire').addEventListener('pointerdown', (ev) => { grab($('tfire'), ev); touch.pad.fireDown(ev.pointerId); touchSync(); });
+for (const id of ['tdir', 'tfire']) {
+  for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) $(id).addEventListener(t, (ev) => { touch.pad.up(ev.pointerId); touchSync(); });
+  $(id).addEventListener('contextmenu', (ev) => ev.preventDefault());       // la pressione lunga di Android non apre il menu
+}
+$('tkb').addEventListener('click', () => { const c = $('vk'); c.checked = !c.checked; c.dispatchEvent(new Event('change')); });
+$('tmode').addEventListener('change', (ev) => { touch.mode = ev.target.value; applyTouch(); });
+$('tstick').addEventListener('change', (ev) => { touch.pad.setMode(ev.target.value); touchSync(); applyTouch(); });
+if (coarse && coarse.addEventListener) coarse.addEventListener('change', applyTouch);
 
 // ---------------------------------------------------------------- comandi
 async function handleFiles(files) {
@@ -928,7 +996,15 @@ $('b-swap').addEventListener('click', () => { app.setSwapPads(!app.swapPads); re
 $('b-crt').addEventListener('click', () => { app.cycleLook(); renderLook(); focusScreen(); });
 $('b-full').addEventListener('click', toggleFull);
 if (!$('stage').requestFullscreen) $('b-full').style.display = 'none';
-document.addEventListener('fullscreenchange', () => { relayout(); if (document.fullscreenElement) focusScreen(); });
+// a schermo intero con i comandi a tocco la tastiera della console va dentro #play (altrimenti non si vedrebbe), poi torna al suo posto
+const vkHome = $('vkeys').parentNode;
+document.addEventListener('fullscreenchange', () => {
+  const inPlay = document.fullscreenElement === $('play'), vk = $('vkeys');
+  if (inPlay && vk.parentNode !== $('play')) $('play').appendChild(vk);
+  else if (!inPlay && vk.parentNode !== vkHome) vkHome.appendChild(vk);
+  relayout();
+  if (document.fullscreenElement) focusScreen();
+});
 window.addEventListener('resize', relayout);
 if (window.ResizeObserver) new ResizeObserver(relayout).observe($('stage'));
 
@@ -989,7 +1065,7 @@ for (const pl of [1, 2]) {
 }
 window.addEventListener('gamepadconnected', () => { ui.padKey = ''; });
 window.addEventListener('gamepaddisconnected', () => { ui.padKey = ''; });
-$('vk').addEventListener('change', (ev) => { buildVKeys(); $('vkeys').classList.toggle('on', ev.target.checked); });
+$('vk').addEventListener('change', (ev) => { buildVKeys(); $('vkeys').classList.toggle('on', ev.target.checked); $('tkb').setAttribute('aria-pressed', ev.target.checked ? 'true' : 'false'); });
 $('stage').addEventListener('click', focusScreen);
 window.addEventListener('pointerdown', unlockAudio, true);
 window.addEventListener('keydown', unlockAudio, true);
@@ -1078,6 +1154,7 @@ function applyLang(l, fromUser) {
 }
 for (const b of document.querySelectorAll('#langs button')) b.addEventListener('click', () => { if (b.dataset.lang !== I18N.getLang()) applyLang(b.dataset.lang, true); });
 
+applyTouch();
 renderAll();
 renderNet();
 renderPads();
@@ -1092,4 +1169,4 @@ if (AUTO_CHARSETS) {
 // per le prove nel browser (screenshot, controlli): niente di cio' esce dalla pagina
 charui = CharUI.init({$, app, log, readFile, download});
 applyLang(I18N.getLang(), false);
-window.o2web = {app, ui, sink, screen, renderAll, renderLook, relayout, charui, toggleHelp, AUTO_CHARSETS, applyLang, I18N};
+window.o2web = {app, ui, sink, screen, renderAll, renderLook, relayout, charui, toggleHelp, AUTO_CHARSETS, applyLang, I18N, touch, applyTouch, fullTarget};
