@@ -8,6 +8,8 @@ O2web e' un emulatore, in **un solo file HTML con JavaScript**, delle console **
 > **I giochi, il BIOS e il set di caratteri del chip video restano dei rispettivi titolari.** Qui non c'e' nessun BIOS, nessuna cartuccia, nessun set di
 > caratteri e nessuna copertina: i file li porti tu, per uso personale. Il codice e' originale; MAME e O2EM sono stati letti solo come documentazione.
 
+**Provalo online:** <https://o2web-flame.vercel.app/> (la stessa pagina, ospitata su Vercel: anche li' BIOS e giochi restano nel tuo browser e non vengono caricati da nessuna parte). **Codice sorgente:** <https://github.com/agara73/o2web>.
+
 Stato: **tappa 6a (modulo scacchi Philips C7010) fatta**: nucleo Z80 originale (`src/z80.js`) e modulo (`src/chessmod.js`), tutto da verificare sull'hardware vero; la ROM da 8 KB la porti tu. Tappa 5 (Videopac+ G7400) fatta: console G7400 con EF9340 / EF9341, mixer con l'8245, cartucce da 12 e 16 KB, set di caratteri dell'EF9341 come secondo ingresso. Tappa 4c: rete su richiesta, copertine dei giochi. **Tappa 5c (15/10/2026): nuova pagina** (scelta della macchina, tasti come quelli del G7000 sotto lo schermo, «Schermo e suono» sotto i tasti, pannelli riordinati). Tappa 4b: aspetto (monitor in bianco e nero del G7200, filtri da tubo catodico, disegno della macchina). Tappa 4: file HTML unico, licenza, schermata di avvio, set di caratteri come ingresso in evidenza. Suono, joystick 1 e 2, gamepad, tasti
 configurabili, elenco unico di giochi e BIOS anche da archivi .zip, sessione, schermo intero, PAL / NTSC: tappa 3. 
 
@@ -128,11 +130,11 @@ O2web e' un sito statico: un solo file HTML, nessun intermediario, nessun server
 - **Da Git:** metti il repository (senza dump: `.gitignore` esclude `*.bin`, `*.zip`, immagini e le cartelle di prova `_tosec*`) su GitHub e importalo in Vercel (preset «Other»; il resto lo
   decide `vercel.json`).
 - **A mano:** `node tools/build.js dist/index.html` e poi, dalla cartella del progetto, `vercel deploy dist --prod` (serve la CLI di Vercel).
-- **Non provato:** la configurazione per Vercel non e' stata provata su Vercel (il sandbox di sviluppo non ci arriva); la pagina costruita si prova da disco e da un server locale.
+- **Provato il 30/10/2026:** il sito <https://o2web-flame.vercel.app/>, costruito da Vercel dal repository GitHub con la configurazione di `vercel.json`, avvia l'emulatore e carica BIOS e cartuccia.
 - La regola di sicurezza (`connect-src https:`) e' uguale nella pagina (`web/index.template.html`) e in `vercel.json`: il build rifiuta di procedere se non coincidono o se qualcuno la allarga.
   Il sito non ha funzioni sul server e non fa da intermediario: gli scarichi vanno dal browser dell'utente direttamente al sito che ha indicato.
-- **Codice sorgente (GPL):** la pagina contiene tutto il codice JavaScript in chiaro; i moduli separati, i test e gli strumenti stanno nel pacchetto dei sorgenti / nel repository.
-  Indirizzo del repository: _da indicare quando lo pubblichi_ (poi aggiungilo qui e nella sezione «Informazioni e licenza» di `web/index.template.html`).
+- **Codice sorgente (GPL):** la pagina contiene tutto il codice JavaScript in chiaro; i moduli separati, i test e gli strumenti stanno nel repository <https://github.com/agara73/o2web>
+  (collegato anche dalla sezione «Informazioni e licenza» della pagina).
 
 ## Per chi sviluppa (servono Node.js 22 e Python 3; per la prova nel browser anche Playwright con Chromium)
 ```sh
