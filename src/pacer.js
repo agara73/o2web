@@ -6,8 +6,10 @@
 // rallenta). L'audio da' solo una piccola correzione (al massimo CORR_MAX, impercettibile) per seguire la differenza fra l'orologio
 // della pagina e quello dell'audio, cosi' la coda del suono non cresce e non si svuota col tempo.
 // L'anticipo dell'audio (lead) si adatta al browser: si misura di quanto salta l'orologio dell'audio fra una chiamata e l'altra (alcuni
-// telefoni lo fanno avanzare a blocchi di 85 ms e piu') e si tiene in coda JUMP_MARGIN volte quel salto piu' JUMP_EXTRA, fra LEAD_MIN e
-// LEAD_MAX; il salto misurato cala piano (JUMP_DECAY a ogni chiamata) se il browser poi avanza a passi piu' piccoli.
+// telefoni lo fanno avanzare a blocchi di 85 ms e piu') e si tiene in coda quel salto piu' JUMP_EXTRA, fra LEAD_MIN e LEAD_MAX; il
+// salto misurato cala piano (JUMP_DECAY a ogni chiamata) se il browser poi avanza a passi piu' piccoli. Prima il margine era 1,5 volte
+// il salto piu' 20 ms: sul telefono vero (blocchi di circa 125 ms) il suono arrivava in ritardo di circa mezzo secondo con quello del
+// telefono; con salto + 30 ms il ritardo nostro cala di circa 55 ms senza vuoti (misure in o2web-stato.md).
 // Solo logica pura (nessun DOM, nessun orologio proprio): si prova in Node (test/test_pacer.js) contro un riferimento scritto a parte
 // in Python (hw/pacer_ref.py). Prima della tappa 8 il passo era guidato dalla coda dell'audio: su un telefono con l'orologio audio a
 // blocchi di 85 ms il gioco andava a circa 35 fotogrammi al secondo invece di 50 (misura in o2web-stato.md).
@@ -17,9 +19,8 @@ const MAX_FRAMES = 3;       // fotogrammi al massimo per chiamata (il resto rest
 const MAX_OWED = 0.1;       // s di emulazione in arretrato al massimo: oltre si lascia perdere (non si "corre" per recuperare)
 const LEAD_MIN = 0.06;      // s di audio in coda: minimo (come prima della tappa 8)
 const LEAD_MAX = 0.5;       // s: massimo
-const JUMP_MARGIN = 1.5;
-const JUMP_EXTRA = 0.02;
-const JUMP_CLAMP = 0.4;     // s: un salto dell'orologio audio piu' grande (audio fermo e ripartito) conta come 0,4 s
+const JUMP_EXTRA = 0.03;    // s: margine oltre il salto dell'orologio audio
+const JUMP_CLAMP = 0.5;     // s: un salto dell'orologio audio piu' grande (audio fermo e ripartito) conta come 0,5 s
 const JUMP_DECAY = 0.999;   // a ogni chiamata (a 60 al secondo: dimezza in circa 12 s)
 const QAVG_K = 0.02;        // media mobile della coda dell'audio
 const CORR_MAX = 0.005;     // correzione di velocita' massima: +-0,5%
@@ -41,7 +42,7 @@ class Pacer {
     if (this.jump === undefined) this.jump = 0;
   }
 
-  get lead() { return clamp(JUMP_MARGIN * this.jump + JUMP_EXTRA, LEAD_MIN, LEAD_MAX); }
+  get lead() { return clamp(this.jump + JUMP_EXTRA, LEAD_MIN, LEAD_MAX); }
 
   // ts: ora della chiamata in ms; period: secondi di un fotogramma; audio: null (niente audio attivo) oppure
   // {time: ora dell'orologio dell'audio in s, queued: s di audio in coda}. Ritorna i fotogrammi da emulare.
@@ -70,4 +71,4 @@ class Pacer {
   }
 }
 
-module.exports = {Pacer, MAX_DT, MAX_FRAMES, MAX_OWED, LEAD_MIN, LEAD_MAX, JUMP_MARGIN, JUMP_EXTRA, JUMP_CLAMP, JUMP_DECAY, QAVG_K, CORR_MAX};
+module.exports = {Pacer, MAX_DT, MAX_FRAMES, MAX_OWED, LEAD_MIN, LEAD_MAX, JUMP_EXTRA, JUMP_CLAMP, JUMP_DECAY, QAVG_K, CORR_MAX};

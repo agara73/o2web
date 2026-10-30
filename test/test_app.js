@@ -275,7 +275,7 @@ class FakeCtx {
     const fps = frames / 17;
     ok(Math.abs(fps - 49.7) < 0.7, 'telefono con l\'audio a blocchi di 85 ms: ' + fps.toFixed(1) + ' fotogrammi/s (atteso ~49,7)');
     ok(sink.underruns - u0 === 0, 'telefono: l\'audio non va mai a vuoto dopo i primi 3 secondi (' + (sink.underruns - u0) + ')');
-    ok(sink.lead > 0.13 && sink.lead < 0.16 && a.pacer.lead === sink.lead, 'telefono: anticipo adattato (' + Math.round(sink.lead * 1000) + ' ms) e passato all\'uscita audio');
+    ok(sink.lead > 0.105 && sink.lead < 0.125 && a.pacer.lead === sink.lead, 'telefono: anticipo adattato (' + Math.round(sink.lead * 1000) + ' ms) e passato all\'uscita audio');
     ok(maxQ < 0.3, 'telefono: coda al massimo ' + Math.round(maxQ * 1000) + ' ms');
     // coda cresciuta oltre misura (audio fermo): si svuota
     sink.next = ctx.currentTime + 2;

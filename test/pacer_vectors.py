@@ -105,7 +105,7 @@ def main():
                            rng.uniform(0.997, 1.003), rng.choice([PAL, NTSC]),
                            events=[(rng.uniform(2, 11), rng.choice(["gap", "pause", "back"]), rng.uniform(10, 3000))]))
     consts = {"MAX_DT": R.DT_MAX, "MAX_FRAMES": R.PER_CALL, "MAX_OWED": R.OWED_MAX, "LEAD_MIN": R.LEAD_LO, "LEAD_MAX": R.LEAD_HI,
-              "JUMP_MARGIN": R.MARGIN, "JUMP_EXTRA": R.EXTRA, "JUMP_CLAMP": R.JUMP_HI, "JUMP_DECAY": R.DECAY, "QAVG_K": R.AVG_W, "CORR_MAX": R.SPEED_MAX}
+              "JUMP_EXTRA": R.EXTRA, "JUMP_CLAMP": R.JUMP_HI, "JUMP_DECAY": R.DECAY, "QAVG_K": R.AVG_W, "CORR_MAX": R.SPEED_MAX}
     with open(a.out, "w") as f:
         json.dump({"consts": consts, "scenarios": sc}, f)
     assert os.path.getsize(a.out) > 0

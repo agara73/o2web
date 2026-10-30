@@ -54,7 +54,7 @@ for (const [k, v] of Object.entries(vec.consts)) ok(P[k] === v, 'costante ' + k 
   ok(by('telefono-256ms-30hz').max_q < P.LEAD_MAX + 0.256 + 0.01, 'la coda non supera anticipo massimo + un blocco (' + Math.round(by('telefono-256ms-30hz').max_q * 1000) + ' ms)');
   const ph = by('telefono-85ms').calls;
   const leadEnd = ph[ph.length - 1].lead;
-  ok(leadEnd > 0.13 && leadEnd < 0.16, 'telefono a blocchi di 85 ms: anticipo circa 1,5 x 85 + 20 ms (' + Math.round(leadEnd * 1000) + ' ms)');
+  ok(leadEnd > 0.105 && leadEnd < 0.125, 'telefono a blocchi di 85 ms: anticipo circa 85 + 30 ms (' + Math.round(leadEnd * 1000) + ' ms)');
   ok(by('computer').calls[by('computer').calls.length - 1].lead === P.LEAD_MIN, 'computer: anticipo minimo (' + P.LEAD_MIN * 1000 + ' ms)');
   const rates = vec.scenarios.flatMap((s) => s.calls.map((c) => c.rate));
   ok(Math.min(...rates) >= 1 - P.CORR_MAX && Math.max(...rates) <= 1 + P.CORR_MAX, 'la correzione resta entro +-0,5%');
@@ -81,9 +81,9 @@ for (const [k, v] of Object.entries(vec.consts)) ok(P[k] === v, 'costante ' + k 
   const q = new P.Pacer();
   q.step(0, 0.02, {time: 0, queued: 0});
   q.step(20, 0.02, {time: 0.25, queued: 0.1});
-  ok(Math.abs(q.jump - 0.25) < 1e-12 && Math.abs(q.lead - 0.395) < 1e-12, 'salto dell\'orologio audio di 250 ms: anticipo 1,5 x 250 + 20 = 395 ms');
+  ok(Math.abs(q.jump - 0.25) < 1e-12 && Math.abs(q.lead - 0.28) < 1e-12, 'salto dell\'orologio audio di 250 ms: anticipo 250 + 30 = 280 ms');
   q.step(40, 0.02, {time: 5, queued: 0.1});
-  ok(Math.abs(q.jump - P.JUMP_CLAMP) < 1e-12 && q.lead === P.LEAD_MAX, 'salto enorme (audio fermo e ripartito): conta 0,4 s, anticipo massimo 0,5 s');
+  ok(Math.abs(q.jump - P.JUMP_CLAMP) < 1e-12 && q.lead === P.LEAD_MAX, 'salto enorme (audio fermo e ripartito): conta 0,5 s, anticipo massimo 0,5 s');
   q.step(60, 0.02, {time: 4, queued: 0.1});
   ok(Math.abs(q.jump - P.JUMP_CLAMP * P.JUMP_DECAY) < 1e-12, 'orologio audio che torna indietro: nessun salto, quello di prima cala');
   q.step(80, 0.02, {time: NaN, queued: 0.1});

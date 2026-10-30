@@ -7,14 +7,14 @@
   dopo, ma mai piu' di 0,1 s;
 - con l'audio attivo il tempo accumulato si moltiplica per una velocita' 1 + 0,005 * e, dove e = (anticipo - coda media) / anticipo
   tenuto fra -1 e 1; la coda media e' una media mobile (peso 0,02) della coda dell'audio, che parte dal primo valore visto;
-- l'anticipo e' 1,5 * salto + 0,02 s, tenuto fra 0,06 e 0,5 s; il salto e' il piu' grande fra il salto di prima moltiplicato per 0,999
-  e l'avanzamento dell'orologio dell'audio dall'ultima chiamata (al massimo 0,4 s; se l'orologio non avanza, 0);
+- l'anticipo e' salto + 0,03 s, tenuto fra 0,06 e 0,5 s; il salto e' il piu' grande fra il salto di prima moltiplicato per 0,999
+  e l'avanzamento dell'orologio dell'audio dall'ultima chiamata (al massimo 0,5 s; se l'orologio non avanza, 0);
 - senza audio la velocita' e' 1 e coda media e ora dell'audio si dimenticano; l'azzeramento dimentica tutto tranne il salto misurato.
 La simulazione e' scritta come una macchina a stati con un dizionario, senza classi, per non ricalcare il JavaScript."""
 
 DT_MAX, PER_CALL, OWED_MAX = 0.1, 3, 0.1
 LEAD_LO, LEAD_HI = 0.06, 0.5
-MARGIN, EXTRA, JUMP_HI, DECAY = 1.5, 0.02, 0.4, 0.999
+EXTRA, JUMP_HI, DECAY = 0.03, 0.5, 0.999
 AVG_W, SPEED_MAX = 0.02, 0.005
 
 
@@ -23,7 +23,7 @@ def fresh_state(jump=0.0):
 
 
 def lead_of(jump):
-    v = MARGIN * jump + EXTRA
+    v = jump + EXTRA
     if v < LEAD_LO:
         return LEAD_LO
     if v > LEAD_HI:
