@@ -207,7 +207,7 @@ button.key:hover:not(:disabled) { border-color: var(--acc); box-shadow: 0 0 0 2p
 button.key:active:not(:disabled) { transform: translateY(1px); border-bottom-width: 2px; }
 button.key:disabled { opacity: .4; }
 button.key[aria-pressed=true] { background: linear-gradient(#cfe6ff, #9cc4ee); border-color: #3b6ea5; }
-button.key .ks { font-size: .6rem; font-weight: 500; letter-spacing: .08em; opacity: .62; }
+button.key .ks { font-size: .6rem; font-weight: 500; letter-spacing: .08em; opacity: .8; }
 button.key.red { color: #fff; background: linear-gradient(#d6454b, #a62329); border-color: #6c1317; flex-direction: row; gap: 7px; }
 button.key.red .ks { color: #fff; }
 button.key .tri { width: 12px; height: 11px; background: #fff; clip-path: polygon(50% 0, 100% 100%, 0 100%); flex: none; }
@@ -295,6 +295,12 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
   #play:fullscreen { display: grid; }
   #play:fullscreen #stage { height: 100%; }
 }
+.steps { border: 1px solid var(--acc); border-radius: 6px; padding: 8px 10px; margin-top: 8px; background: #182235; }
+.steps ol { list-style: none; margin: 4px 0 0; padding: 0; }
+.steps li { padding: 4px 0; font-weight: 600; }
+.steps li.now { color: var(--acc); }
+.steps li.done { color: var(--good); font-weight: 400; }
+.steps li.done::after { content: " \2713"; }
 .shh { margin-top: 10px; color: var(--dim); font-size: .74rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 #favs { max-height: none; }
 .gl button.s.fav { color: var(--dim); } .gl button.s.fav[aria-pressed=true] { color: var(--warn); }
@@ -494,6 +500,13 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
     <details id="d-machine">
       <summary>Macchina e file</summary>
       <div class="pb">
+      <div id="steps" class="steps" hidden>
+        <div class="dim">Per cominciare, usa &laquo;Aggiungi file&hellip;&raquo; in alto:</div>
+        <ol>
+          <li id="st-bios" data-dyn-attr>1. Aggiungi il BIOS</li>
+          <li id="st-games" data-dyn-attr>2. Aggiungi i giochi</li>
+        </ol>
+      </div>
       <div class="mrow">
         <figure class="machine" id="machine" style="display:none"><div id="machine-img"></div></figure>
         <div class="mcol">

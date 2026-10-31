@@ -604,6 +604,13 @@ function renderNeeds() {
     li.title = n[k].text;
   }
   setNeed($('n-char'), n.char);
+  // passi per cominciare (tappa 8c): finche' manca il BIOS o manca ogni gioco, «Macchina e file» dice che cosa fare per primo
+  const stBios = n.bios.ok, stGames = ng > 0;
+  $('steps').hidden = stBios && stGames;
+  $('st-bios').className = stBios ? 'done' : 'now';
+  $('st-games').className = stGames ? 'done' : (stBios ? 'now' : '');
+  $('st-bios').removeAttribute('aria-current'); $('st-games').removeAttribute('aria-current');
+  if (!stBios) $('st-bios').setAttribute('aria-current', 'step'); else if (!stGames) $('st-games').setAttribute('aria-current', 'step');
 }
 
 // righe di stato dei due set di caratteri (anche dopo un ritocco a caldo dell'editor: cambia l'impronta, non l'elenco dei giochi)

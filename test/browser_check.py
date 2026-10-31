@@ -128,18 +128,22 @@ with sync_playwright() as p:
     src = ev(page, "() => document.documentElement.outerHTML")
     check("SPDX-License-Identifier: GPL-3.0-only" in src and src.count("2026 by Agara73") >= 3, "la pagina porta l'identificatore della licenza e il copyright")
     check(page.is_disabled("#b-start") and page.is_disabled("#b-reset") and page.is_disabled("#b-pause"), "comandi disabilitati senza BIOS")
+    stp = lambda: ev(page, "() => ({vis: !document.getElementById('steps').hidden, b: document.getElementById('st-bios').className, g: document.getElementById('st-games').className, cur: (document.querySelector('#steps [aria-current]') || {}).id || null})")
+    check(page.is_visible("#steps") and stp() == {"vis": True, "b": "now", "g": "", "cur": "st-bios"}, "passi per cominciare: senza BIOS ne' giochi, il primo e' «Aggiungi il BIOS» (%s)" % stp())
 
     # ---- elenco: BIOS singoli + due raccolte TOSEC
     page.set_input_files("#f-files", [os.path.join(D, "bios/o2rom.bin"), os.path.join(D, "bios/c52.bin"), os.path.join(D, "bios/g7400.bin")])
     page.wait_for_timeout(400)
     check(len(ev(page, "() => [...document.querySelectorAll('#bios-sel option')].map(o => o.value)")) == 3, "tre BIOS nell'elenco")
     check(not page.is_disabled("#b-start"), "Avvia abilitato (BIOS G7000 scelto in automatico)")
+    check(stp() == {"vis": True, "b": "done", "g": "now", "cur": "st-games"}, "passi per cominciare: col BIOS il primo e' fatto e il secondo e' «Aggiungi i giochi» (%s)" % stp())
     check(ev(page, "() => document.querySelector('#s-bios .badge').textContent") == "PRONTO" and ev(page, "() => document.querySelector('#s-char .badge').textContent") == "GPL", "schermata di avvio: BIOS pronto, set di caratteri GPL in uso")
     if have_tosec:
         page.set_input_files("#f-files", [o2zip, vpzip])
         page.wait_for_function("() => document.querySelectorAll('#games li').length >= 100", timeout=15000)
         n_games = ev(page, "() => window.o2web.app.lib.games.length")
         check(n_games == 167, "raccolte TOSEC: 167 giochi (%d)" % n_games)
+        check(stp()["vis"] is False and not page.is_visible("#steps"), "passi per cominciare: con BIOS e giochi spariscono")
         check(ev(page, "() => window.o2web.app.lib.bios.length") == 4, "BIOS con lo stesso contenuto elencati una volta sola: 4 in tutto")
         opts = ev(page, "() => [...document.querySelectorAll('#folder option')].map(o => o.textContent)")
         check(len(opts) == 5, "filtro cartelle: tutte + 4 (%s)" % "; ".join(opts))

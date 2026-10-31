@@ -82,6 +82,7 @@ echo "== 9l. tappa 5c - la macchina come scelta unica (BIOS, standard e schermo 
 node "$HERE/test_machine.js" "$DUMPS"
 echo "== 9m. tappa 5d - lingue: inglese predefinito, tabelle, modelli, frammenti, plurali; i moduli di base restano in italiano"
 node "$HERE/test_i18n.js"
+node "$HERE/test_contrast.js"
 echo "== 9n. tappa 6a - Z80 (z80.js) e modulo scacchi C7010 (chessmod.js): prove puntuali, sessione, regista; differenziale contro il pacchetto Python z80 (Z80_LIB)"
 tl 1 node "$HERE/test_z80_misc.js"
 tl 1 node "$HERE/test_chess.js"
