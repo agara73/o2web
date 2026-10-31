@@ -121,7 +121,7 @@ with sync_playwright() as p:
     pg.tap("#b-menu")
     pg.wait_for_timeout(300)
     opened = pg.evaluate("() => ({open: document.querySelectorAll('#panel > details[open]').length, id: (document.querySelector('#panel > details[open]') || {}).id, left: document.getElementById('panel').getBoundingClientRect().left, w: document.getElementById('panel').getBoundingClientRect().width, iw: innerWidth, shade: !document.getElementById('shade').hidden, exp: document.getElementById('b-menu').getAttribute('aria-expanded')})")
-    check(opened["open"] == 1 and opened["id"] == "d-games" and opened["left"] == 0 and opened["w"] <= opened["iw"] * 0.9 and opened["shade"] and opened["exp"] == "true", "menu: si apre il cassetto con «Macchina e giochi», ombra sul resto (%s)" % opened)
+    check(opened["open"] == 1 and opened["id"] == "d-machine" and opened["left"] == 0 and opened["w"] <= opened["iw"] * 0.9 and opened["shade"] and opened["exp"] == "true", "menu: si apre il cassetto con «Macchina e file» (prima apertura), ombra sul resto (%s)" % opened)
     pg.tap("#d-look > summary")
     pg.wait_for_timeout(300)
     check(pg.evaluate("() => [...document.querySelectorAll('#panel > details[open]')].map(d => d.id).join()") == "d-look", "un solo pannello alla volta: aprendo «Aspetto» si chiude «Macchina e giochi»")

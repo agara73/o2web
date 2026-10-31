@@ -925,7 +925,8 @@ async function handleFiles(files) {
   app.changed();
 }
 
-for (const id of ['b-add', 'b-add2']) $(id).addEventListener('click', () => { $('f-files').value = ''; $('f-files').click(); });
+function pickFiles() { $('f-files').value = ''; $('f-files').click(); }
+$('b-add').addEventListener('click', pickFiles);
 $('f-files').addEventListener('change', (ev) => { handleFiles(Array.from(ev.target.files || [])); });
 const drop = $('drop');
 for (const n of ['dragenter', 'dragover']) window.addEventListener(n, (e) => { e.preventDefault(); drop.classList.add('over'); });
@@ -938,13 +939,20 @@ const panels = Array.from(drawer.querySelectorAll(':scope > details'));
 function syncHeader() { document.documentElement.style.setProperty('--hh', document.querySelector('header').offsetHeight + 'px'); }      // il cassetto e lo schermo partono sotto la barra
 syncHeader();
 if (window.ResizeObserver) new ResizeObserver(syncHeader).observe(document.querySelector('header'));
-function setDrawer(on) {
+function openPanel() { return panels.find((d) => d.open) || null; }
+// quale voce si apre da sola: senza BIOS o senza giochi «Macchina e file» (li si aggiunge li'), altrimenti «Giochi»
+function firstPanel() { return (!app.bios || !app.lib.games.length) ? $('d-machine') : $('d-games'); }
+function setDrawer(on, focusMenu) {
   syncHeader();
+  if (on) showSess(false);
   document.body.classList.toggle('menu-open', on);
   drawer.inert = !on;
   $('shade').hidden = !on;
   $('b-menu').setAttribute('aria-expanded', on ? 'true' : 'false');
+  if (!on && focusMenu) $('b-menu').focus();
 }
+// il focus entra nel cassetto aprendolo con il pulsante del menu (sul titolo della voce aperta) e torna al pulsante chiudendolo
+function focusDrawer() { const d = openPanel(); const f = d && d.querySelector(':scope > summary'); if (f) f.focus(); }
 for (const d of panels) d.addEventListener('toggle', () => {
   if (!d.open) return;
   for (const o of panels) if (o !== d) o.open = false;
@@ -952,11 +960,21 @@ for (const d of panels) d.addEventListener('toggle', () => {
 });
 $('b-menu').addEventListener('click', () => {
   if (document.body.classList.contains('menu-open')) { setDrawer(false); return; }
-  if (panels.some((d) => d.open)) setDrawer(true); else $('d-games').open = true;
+  if (openPanel()) setDrawer(true); else firstPanel().open = true;
+  setDrawer(true);
+  focusDrawer();
 });
-$('shade').addEventListener('click', () => setDrawer(false));
+$('b-close').addEventListener('click', () => setDrawer(false, true));
+$('shade').addEventListener('click', () => setDrawer(false, true));
+
+// menu «Sessione» nella barra: apri / salva, sempre a portata di mano
+function showSess(on) { $('sessmenu').hidden = !on; $('b-sess').setAttribute('aria-expanded', on ? 'true' : 'false'); }
+$('b-sess').addEventListener('click', () => { const on = $('sessmenu').hidden; showSess(on); if (on) $('b-sess-import').focus(); });
+$('b-sess-import').addEventListener('click', () => { showSess(false); pickFiles(); });
+document.addEventListener('click', (e) => { if (!$('sessmenu').hidden && !e.target.closest('.sessw')) showSess(false); });
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !e.defaultPrevented && !ui.capture && document.body.classList.contains('menu-open')) { setDrawer(false); $('b-menu').focus(); }
+  if (e.key === 'Escape' && !e.defaultPrevented && !ui.capture && !$('sessmenu').hidden) { showSess(false); $('b-sess').focus(); return; }
+  if (e.key === 'Escape' && !e.defaultPrevented && !ui.capture && document.body.classList.contains('menu-open')) setDrawer(false, true);
 });
 
 $('b-covers-clear').addEventListener('click', () => {
@@ -1056,6 +1074,7 @@ $('b-save').addEventListener('click', () => {
   log('Stato salvato (' + f.bytes.length + ' byte). Contiene solo lo stato della macchina e le impronte dei file, non i file.', 'good');
 });
 $('b-sess-save').addEventListener('click', () => {
+  showSess(false);
   try {
     const bytes = app.saveSession();
     download('o2web-sessione-' + stamp() + '.zip', bytes, 'application/zip');

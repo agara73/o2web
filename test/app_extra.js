@@ -10,7 +10,7 @@ const {zipStore} = require(SP('zipstore.js'));
 const {sha256} = require(SP('sha256.js'));
 const charsetOwn = require('../hw/charset_own.js');
 const FALLBACK = new Uint8Array(charsetOwn.build());
-const MANCA = 'Si usa il set di caratteri GPL incluso nella pagina (512 byte, disegnato da zero): va bene per il menu, ma i simboli speciali di alcuni giochi non coincidono e certi giochi possono risultare ingiocabili. Puoi correggerlo nell’«Editor dei caratteri» o aggiungere l’originale in «Macchina e giochi».';
+const MANCA = 'Si usa il set di caratteri GPL incluso nella pagina (512 byte, disegnato da zero): va bene per il menu, ma i simboli speciali di alcuni giochi non coincidono e certi giochi possono risultare ingiocabili. Puoi correggerlo nell’«Editor dei caratteri» o aggiungere l’originale in «Macchina e file».';
 
 module.exports = async function appExtra(ok, eq) {
   let seed = 321;

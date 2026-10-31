@@ -116,7 +116,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(200)
     check(ev(pg, "() => document.documentElement.lang") == "it" and ev(pg, "() => document.title") == "O2web - emulatore Odyssey 2 / Videopac", "bandiera italiana: pagina e titolo in italiano")
     txt_it = "\n".join(page_text(pg))
-    check("Donazioni" in txt_it and "Lista dei desideri su Amazon" in txt_it and "Macchina e giochi" in txt_it, "italiano: pannelli e donazioni")
+    check("Donazioni" in txt_it and "Lista dei desideri su Amazon" in txt_it and "Macchina e file" in txt_it, "italiano: pannelli e donazioni")
     lo = leftovers(pg, EN_WORDS, ignore=("O2EM", "GitHub", "BIOS", "EF9341", "Videopac", "Odyssey", "GNU GENERAL PUBLIC LICENSE"))
     check(lo == [], "nessun testo inglese rimasto nella pagina italiana (%s)" % lo[:4])
     check(ev(pg, "() => document.querySelector('#langs button[data-lang=it]').getAttribute('aria-pressed')") == "true", "bandiera italiana premuta")

@@ -266,7 +266,7 @@ function init(env) {
     if (!available()) return;
     const name = ed.kind === 'vdc' ? 'o2web-charset-chip-video.bin' : 'o2web-charset-ef9341.bin';
     download(name, cur().slice(), 'application/octet-stream');
-    log(T('Salvato {name} ({n} byte). ', {name, n: cur().length}) + T('Per riusarlo: aggiungilo con «Aggiungi file» in «Macchina e giochi» (o trascinalo sulla pagina).') +
+    log(T('Salvato {name} ({n} byte). ', {name, n: cur().length}) + T('Per riusarlo: aggiungilo con «Aggiungi file» in alto (o trascinalo sulla pagina).') +
       ' ' + T('Se parti da un set originale, il file resta personale: non condividerlo.'), 'good');
   });
   function importBytes(fname, bytes) {

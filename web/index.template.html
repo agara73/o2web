@@ -15,12 +15,13 @@ html, body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.4
 body { min-height: 100vh; display: flex; flex-direction: column; }
 header, main, footer { width: 100%; max-width: 1320px; margin: 0 auto; padding: 0 16px; }
 header { padding-top: 14px; padding-bottom: 4px; }
-header { position: sticky; top: 0; z-index: 20; max-width: none; background: var(--bg); border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+header { position: sticky; top: 0; z-index: 50; max-width: none; background: var(--bg); border-bottom: 1px solid var(--line); padding-bottom: 8px; }
 .hrow { display: flex; align-items: center; gap: 12px; max-width: 1320px; margin: 0 auto; }
 .htitle { flex: 1; min-width: 0; }
 #b-menu { flex: none; width: 44px; min-height: 44px; padding: 0; font-size: 1.4rem; line-height: 1; }
 #b-add { flex: none; min-height: 44px; font-weight: 600; border-color: var(--acc); }
-@media (max-width: 520px) { .htitle p { display: none; } #b-add { padding: 6px 10px; } }
+.hbreak { display: none; }
+@media (max-width: 520px) { .hrow { flex-wrap: wrap; gap: 6px 8px; } .hbreak { display: block; flex-basis: 100%; height: 0; order: 2; } #b-menu { order: 0; } .htitle { order: 1; } #langs { order: 1; } .sessw, #b-add, #b-crt { order: 3; } .htitle p { display: none; } #b-add { padding: 6px 10px; } #b-crt .ks { display: none; } }
 #panel { position: fixed; top: var(--hh, 64px); bottom: 0; left: 0; width: min(88vw, 400px); z-index: 40; overflow-y: auto; padding: 12px; background: var(--bg); border-right: 1px solid var(--line);
   transform: translateX(-102%); transition: transform .2s; }
 body.menu-open #panel { transform: none; }
@@ -28,6 +29,19 @@ body.menu-open #panel { transform: none; }
 #shade[hidden] { display: none; }
 @media (min-width: 900px) and (min-height: 600px) { #shade { display: none; } body.menu-open main, body.menu-open footer { padding-left: 416px; } }      /* sul computer (e su un tablet) il cassetto spinge la pagina; su un telefono, anche in orizzontale, la copre */
 @media (prefers-reduced-motion: reduce) { #panel { transition: none; } }
+#b-sess, #b-crt { flex: none; min-height: 44px; }
+#b-crt .ks { margin-left: 6px; font-size: .72rem; color: var(--dim); }
+.sessw { position: relative; flex: none; }
+#sessmenu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; width: min(300px, 86vw); display: flex; flex-direction: column; gap: 6px; padding: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 20px #000a; }
+#sessmenu[hidden] { display: none; }
+#sessmenu button { text-align: left; min-height: 40px; }
+.dhead { display: flex; justify-content: flex-end; flex: none; margin: -4px 0 -4px; }
+#b-close { min-height: 40px; min-width: 44px; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 8px; }
+.pair select { width: 100%; }
+#panel > #d-don { position: sticky; bottom: -12px; margin: 0 -12px -12px; padding: 8px 12px; border-radius: 0; border-width: 1px 0 0; display: flex; align-items: center; gap: 12px; flex: none; z-index: 2; }
+#panel > #d-don h2 { padding: 0; }
+#panel > #d-don a.don-link { padding: 6px 12px; font-size: .88rem; }
 #langs { display: flex; gap: 8px; flex: none; padding-top: 2px; }
 #langs button { padding: 3px; min-height: 0; line-height: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; opacity: .6; }
 #langs button svg { display: block; border-radius: 3px; box-shadow: 0 0 0 1px #0006; }
@@ -268,12 +282,20 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
 <body>
 <header>
   <div class="hrow">
-    <button type="button" id="b-menu" aria-expanded="false" aria-controls="panel" aria-label="Menu dei pannelli" title="Pannelli: macchina e giochi, stato, rete, aspetto, tasti, caratteri, informazioni">&#9776;</button>
+    <button type="button" id="b-menu" aria-expanded="false" aria-controls="panel" aria-label="Menu dei pannelli" title="Pannelli: giochi, tasti, aspetto, macchina e file, stato, rete, caratteri, informazioni">&#9776;</button>
     <div class="htitle">
       <h1>O2web</h1>
       <p>Emulatore di Magnavox Odyssey&sup2; e Philips Videopac G7000 / G7200 / G7400 &mdash; gira nel browser, anche da disco e senza connessione.</p>
     </div>
+    <span class="sessw"><button type="button" id="b-sess" aria-expanded="false" aria-controls="sessmenu" title="Apri o salva la sessione: elenco, BIOS, giochi, stati e impostazioni in un solo file">Sessione &#9662;</button>
+      <div id="sessmenu" role="group" aria-label="Sessione" hidden>
+        <button type="button" id="b-sess-import">Apri sessione&hellip;</button>
+        <button type="button" id="b-sess-save">Salva sessione (contiene i dump)</button>
+        <div class="privacy">La sessione contiene tutti i dump (BIOS e cartucce) che hai caricato: &egrave; un file personale, non condividerlo.</div>
+      </div></span>
     <input type="file" id="f-files" multiple hidden><button type="button" id="b-add" title="BIOS, set di caratteri, cartucce (.bin), archivi .zip, stati e sessioni: restano nel tuo browser">Aggiungi file&hellip;</button>
+            <button type="button" id="b-crt" class="hbtn" title="Filtri da tubo catodico: passa all&rsquo;insieme successivo (nessun filtro, leggero, anni &rsquo;80, poi il tuo personalizzato se ne hai fatto uno). Le regolazioni una per una sono nel pannello &laquo;Aspetto&raquo;."><span class="kl">Filtri CRT</span> <span class="ks" data-dyn>spenti</span></button>
+    <div class="hbreak"></div>
     <nav id="langs" data-dyn aria-label="Language / Lingua">
       <button type="button" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="true"><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="13"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button>
       <button type="button" data-lang="it" lang="it" title="Italiano" aria-label="Italiano" aria-pressed="false"><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false"><rect width="20" height="40" fill="#009246"/><rect x="20" width="20" height="40" fill="#fff"/><rect x="40" width="20" height="40" fill="#ce2b37"/></svg></button>
@@ -334,7 +356,6 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       </div></div>
       <div class="pgrp"><span class="leg">Schermo</span><div class="pk">
         <button class="key" id="b-full" title="Schermo intero (F10)"><span class="kl">Schermo intero</span><span class="ks">F10</span></button>
-        <button type="button" class="key" id="b-crt" title="Filtri da tubo catodico: passa all&rsquo;insieme successivo (nessun filtro, leggero, anni &rsquo;80, poi il tuo personalizzato se ne hai fatto uno). Le regolazioni una per una sono nel pannello &laquo;Aspetto&raquo;."><span class="kl">Filtri CRT</span><span class="ks" data-dyn>spenti</span></button>
       </div></div>
       <div class="pgrp" id="pg-kb"><span class="leg">Tastiera</span><div class="pk">
         <button type="button" class="key" id="b-vk" aria-pressed="false" title="Mostra o nasconde la tastiera della console (serve, per esempio, per scegliere il gioco nel menu del BIOS)"><span class="kl">Tastiera</span></button>
@@ -367,8 +388,73 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
     <div id="vkeys" aria-label="Tastiera a schermo"></div>
   </section>
   <aside id="panel" aria-label="Pannelli" inert>
+    <div class="dhead"><button type="button" id="b-close" aria-label="Chiudi i pannelli" title="Chiudi i pannelli (Esc)">&#10005;</button></div>
     <details id="d-games">
-      <summary>Macchina e giochi</summary>
+      <summary>Giochi</summary>
+      <div class="fh"><label class="f" for="q">Cerca nell&rsquo;elenco dei giochi</label>
+        <button type="button" class="help" aria-expanded="false" aria-controls="h-games" aria-label="Aiuto: giochi" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-games" hidden>
+        <p>I giochi sono file .bin (anche dentro un archivio compresso .zip, anche con altri .zip dentro) che porti tu con &laquo;Aggiungi file&hellip;&raquo;: restano nel browser.</p>
+        <p>Un clic su un gioco lo avvia a freddo; &#9679; riprende la partita memorizzata; &times; lo toglie dall&rsquo;elenco.</p>
+        <p>Ogni gioco si mostra con la sua sigla numerata (vp_13 = Videopac n. 13, o2_45 = Odyssey&sup2; AJ9445, br_ = Brasile) e il suo nome; sotto, gli altri nomi con cui l&rsquo;hai trovato. La sigla sta nel nome del file oppure si riconosce dal contenuto. Se aggiungi anche un elenco di nomi (per esempio Gamelist777.txt) i nomi vengono da l&igrave;; altrimenti da una tabella incorporata.</p>
+        <p>&laquo;Unisci giochi duplicati&raquo;: i file con lo stesso identico contenuto (anche con nomi diversi, da raccolte diverse) diventano una voce sola; versioni diverse dello stesso gioco restano separate. &Egrave; solo il modo di mostrarli: i file non cambiano. &laquo;Anteprime&raquo;: una piccola schermata del gioco, ottenuta facendolo girare per qualche secondo nel tuo browser (solo per le righe che vedi); se il gioco resta fermo su uno schermo quasi vuoto, prova a premere in sequenza i tasti della console (pu&ograve; richiedere qualche secondo in più); resta in memoria e non viene salvata da nessuna parte.</p>
+      </div>
+      <input type="search" id="q" placeholder="titolo, anno, editore, paese&hellip;" autocomplete="off">
+      <div class="pair">
+        <div><label class="f" for="folder">Cartella</label><select id="folder" data-dyn><option value="*">Tutte le cartelle</option></select></div>
+        <div><label class="f" for="order-sel">Ordina per</label><select id="order-sel"><option value="device">Dispositivo e numero di cassetta</option><option value="name">Nome del gioco</option></select></div>
+      </div>
+      <div class="dim" id="count" data-dyn style="margin-top:6px"></div>
+      <figure class="cover" id="cover" style="display:none"><img id="cover-img" alt=""><figcaption id="cover-cap"></figcaption></figure>
+      <ul id="games" data-dyn></ul>
+      <div class="row"><button id="b-clearlib" disabled>Svuota elenco</button><button type="button" id="b-merge" aria-pressed="true" title="Mostra una voce sola per i file con lo stesso contenuto">Unisci giochi duplicati</button><button type="button" id="b-previews" aria-pressed="true" title="Piccola anteprima di una schermata di gioco">Anteprime</button><span class="dim" id="clear-note"></span></div>
+    </details>
+    <details id="d-keys">
+      <summary>Tasti, joystick e gamepad</summary>
+      <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-keys" aria-label="Aiuto: tasti, joystick e gamepad" title="Aiuto">?</button></div>
+      <div class="helpbox" id="h-keys" hidden>
+        <p>Tastiera della console: cifre, lettere, <kbd>Spazio</kbd>, <kbd>Invio</kbd> (ENT), <kbd>Esc</kbd> o <kbd>Canc</kbd> (CLR), <kbd>+ - * / = . ? :</kbd>.
+          Scorciatoie: <kbd>F8</kbd> pausa, <kbd>F9</kbd> reset console, <kbd>F10</kbd> schermo intero.</p>
+        <p>Gamepad: croce o levetta sinistra = direzioni; A, B, X, Y o i dorsali = fuoco; Start = ENT; Indietro = CLR. Se il gamepad non compare, collegalo e premi un suo tasto (il browser lo mostra solo dopo la prima pressione).</p>
+      </div>
+      <div class="row">
+        <button id="p-tastierino">Joystick 2 sul tastierino</button><button id="p-portatile">Joystick 2 su I J K L (portatile)</button>
+      </div>
+      <table class="keys" id="keytab"><thead><tr><th>Azione</th><th>Joystick 1</th><th>Joystick 2</th></tr></thead><tbody data-dyn></tbody></table>
+      <div class="dim" id="cap-note" style="margin-top:4px"></div>
+      <label class="f" for="pad1">Gamepad per il joystick 1</label>
+      <select id="pad1" data-dyn></select>
+      <label class="f" for="pad2">Gamepad per il joystick 2</label>
+      <select id="pad2" data-dyn></select>
+      <div class="dim" id="pad-info" data-dyn style="margin-top:4px"></div>
+      <div class="row"><label><input type="checkbox" id="vk"> Tastiera a schermo</label></div>
+      <label class="f" for="tmode">Comandi a tocco (joystick e fuoco sullo schermo)</label>
+      <select id="tmode"><option value="auto">Automatici (se lo schermo &egrave; tattile)</option><option value="on">Sempre</option><option value="off">Mai</option></select>
+      <label class="f" for="tstick">Joystick a tocco</label>
+      <select id="tstick"><option value="cross">Croce fissa</option><option value="float">Segue il dito</option></select>
+      <div class="dim" style="margin-top:4px">Il joystick a tocco muove il joystick 1 (con &laquo;Scambia comandi 1-2&raquo; il 2). Queste due scelte non si ricordano alla prossima apertura.</div>
+    </details>
+    <details id="d-look">
+      <summary>Aspetto (filtri da tubo catodico)</summary>
+      <label class="f" for="look-preset">Filtri da tubo catodico</label>
+      <select id="look-preset">
+        <option value="esatto">Nessun filtro (immagine esatta)</option>
+        <option value="leggero">Tubo catodico, leggero</option>
+        <option value="anni80">Tubo catodico anni &rsquo;80</option>
+        <option value="custom">Personalizzato</option>
+      </select>
+      <div class="sl"><label for="look-blur">Sfocatura del segnale</label><input type="range" id="look-blur" min="0" max="100" step="1"><output data-dyn id="look-blur-v" for="look-blur">0</output></div>
+      <div class="sl"><label for="look-persist">Persistenza del fosforo</label><input type="range" id="look-persist" min="0" max="90" step="1"><output data-dyn id="look-persist-v" for="look-persist">0</output></div>
+      <div class="sl"><label for="look-glow">Alone</label><input type="range" id="look-glow" min="0" max="100" step="1"><output data-dyn id="look-glow-v" for="look-glow">0</output></div>
+      <div class="sl"><label for="look-scan">Righe di scansione</label><input type="range" id="look-scan" min="0" max="100" step="1"><output data-dyn id="look-scan-v" for="look-scan">0</output></div>
+      <div class="sl"><label for="look-mask">Maschera (punti rosso, verde, blu)</label><input type="range" id="look-mask" min="0" max="100" step="1"><output data-dyn id="look-mask-v" for="look-mask">0</output></div>
+      <div class="sl"><label for="look-curve">Curvatura dello schermo</label><input type="range" id="look-curve" min="0" max="100" step="1"><output data-dyn id="look-curve-v" for="look-curve">0</output></div>
+      <label class="f" for="look-detail">Dettaglio (righe, maschera e curvatura)</label>
+      <select id="look-detail"><option value="3">3 &times; 3 pixel per punto</option><option value="4">4 &times; 4 pixel per punto (pi&ugrave; pesante)</option></select>
+      <div class="dim" id="look-info" data-dyn style="margin-top:6px"></div>
+    </details>
+    <details id="d-machine">
+      <summary>Macchina e file</summary>
       <div class="mrow">
         <figure class="machine" id="machine" style="display:none"><div id="machine-img"></div></figure>
         <div class="mcol">
@@ -395,24 +481,8 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
           <select id="bios-sel" data-dyn></select>
         </div>
       </details>
-      <div class="fh"><label class="f" for="q">Cerca nell&rsquo;elenco dei giochi</label>
-        <button type="button" class="help" aria-expanded="false" aria-controls="h-games" aria-label="Aiuto: giochi" title="Aiuto">?</button></div>
-      <div class="helpbox" id="h-games" hidden>
-        <p>I giochi sono file .bin (anche dentro un archivio compresso .zip, anche con altri .zip dentro) che porti tu con &laquo;Aggiungi file&hellip;&raquo;: restano nel browser.</p>
-        <p>Un clic su un gioco lo avvia a freddo; &#9679; riprende la partita memorizzata; &times; lo toglie dall&rsquo;elenco.</p>
-        <p>Ogni gioco si mostra con la sua sigla numerata (vp_13 = Videopac n. 13, o2_45 = Odyssey&sup2; AJ9445, br_ = Brasile) e il suo nome; sotto, gli altri nomi con cui l&rsquo;hai trovato. La sigla sta nel nome del file oppure si riconosce dal contenuto. Se aggiungi anche un elenco di nomi (per esempio Gamelist777.txt) i nomi vengono da l&igrave;; altrimenti da una tabella incorporata.</p>
-        <p>&laquo;Unisci giochi duplicati&raquo;: i file con lo stesso identico contenuto (anche con nomi diversi, da raccolte diverse) diventano una voce sola; versioni diverse dello stesso gioco restano separate. &Egrave; solo il modo di mostrarli: i file non cambiano. &laquo;Anteprime&raquo;: una piccola schermata del gioco, ottenuta facendolo girare per qualche secondo nel tuo browser (solo per le righe che vedi); se il gioco resta fermo su uno schermo quasi vuoto, prova a premere in sequenza i tasti della console (pu&ograve; richiedere qualche secondo in più); resta in memoria e non viene salvata da nessuna parte.</p>
-      </div>
-      <input type="search" id="q" placeholder="titolo, anno, editore, paese&hellip;" autocomplete="off">
-      <label class="f" for="folder">Cartella</label>
-      <div class="row"><label class="f" for="order-sel">Ordina per</label><select id="order-sel"><option value="device">Dispositivo e numero di cassetta</option><option value="name">Nome del gioco</option></select></div>
-      <select id="folder" data-dyn><option value="*">Tutte le cartelle</option></select>
-      <div class="dim" id="count" data-dyn style="margin-top:6px"></div>
-      <figure class="cover" id="cover" style="display:none"><img id="cover-img" alt=""><figcaption id="cover-cap"></figcaption></figure>
-      <ul id="games" data-dyn></ul>
-      <div class="row"><button id="b-clearlib" disabled>Svuota elenco</button><button type="button" id="b-merge" aria-pressed="true" title="Mostra una voce sola per i file con lo stesso contenuto">Unisci giochi duplicati</button><button type="button" id="b-previews" aria-pressed="true" title="Piccola anteprima di una schermata di gioco">Anteprime</button><span class="dim" id="clear-note"></span></div>
-      <div class="drop" id="drop">Trascina qui i file, oppure
-        <button type="button" id="b-add2">Aggiungi file&hellip;</button><button type="button" class="help" aria-expanded="false" aria-controls="h-drop" aria-label="Aiuto: che file si possono aggiungere" title="Aiuto">?</button>
+      <div class="drop" id="drop">Trascina qui i file, oppure usa &laquo;Aggiungi file&hellip;&raquo; in alto.
+        <button type="button" class="help" aria-expanded="false" aria-controls="h-drop" aria-label="Aiuto: che file si possono aggiungere" title="Aiuto">?</button>
         <div class="helpbox" id="h-drop" hidden>
           <p>BIOS, set di caratteri e cartucce (.bin), archivi compressi (.zip, anche con altri .zip dentro), stati (.o2state) e sessioni.</p>
           <p>&Egrave; l&rsquo;unico punto di caricamento: riconosce da solo il tipo di ogni file (anche immagini delle copertine e sorgenti C dei set di caratteri). Porta solo file che hai il diritto di usare: restano nel tuo browser.</p>
@@ -470,19 +540,18 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       <summary>Stato e sessione</summary>
       <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-state" aria-label="Aiuto: stato e sessione" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-state" hidden>
-        <p>Lo stato di una partita contiene solo lo stato della macchina e le impronte dei file, mai i file. Per riaprire uno stato (.o2state) o una sessione usa &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; o trascinali sulla pagina.</p>
+        <p>Lo stato di una partita contiene solo lo stato della macchina e le impronte dei file, mai i file. Per riaprire uno stato (.o2state) o una sessione usa &laquo;Aggiungi file&hellip;&raquo; in alto o trascinali sulla pagina.</p>
         <p>La sessione ricorda elenco, BIOS, gioco in uso, stato di ogni gioco e impostazioni: un solo file per ritrovare tutto.</p>
       </div>
       <div class="row"><button id="b-save" disabled>Salva stato</button></div>
-      <div class="privacy">La sessione contiene tutti i dump (BIOS e cartucce) che hai caricato: &egrave; un file personale, non condividerlo.</div>
-      <div class="row"><button id="b-sess-save">Salva sessione (contiene i dump)</button></div>
+      <div class="dim" style="margin-top:6px">La sessione (apri / salva) si trova nella barra in alto, accanto a &laquo;Aggiungi file&hellip;&raquo;.</div>
     </details>
     <details id="d-net">
       <summary>Rete e copertine</summary>
       <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-net" aria-label="Aiuto: rete" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-net" hidden>
         <p>All&rsquo;apertura la pagina legge solo i set di caratteri da GitHub (salvo con <code>?offline</code>); per il resto non contatta nessun indirizzo da sola: solo se premi &laquo;Scarica&raquo; legge (in sola lettura, solo https) il file dall&rsquo;indirizzo che scrivi qui: nessun tuo file o dato viene inviato. Il file scaricato si tratta come se l&rsquo;avessi scelto dal disco.</p>
-        <p>Se lo scarico da qui non funziona (spesso il sito non permette la lettura da un&rsquo;altra pagina: archive.org, per esempio, non la permette), scarica il file con il browser e poi caricalo con &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo;.</p>
+        <p>Se lo scarico da qui non funziona (spesso il sito non permette la lettura da un&rsquo;altra pagina: archive.org, per esempio, non la permette), scarica il file con il browser e poi caricalo con &laquo;Aggiungi file&hellip;&raquo; in alto.</p>
         <p>Gli archivi possono contenere giochi e BIOS di terzi: scarica solo ci&ograve; che hai il diritto di avere (la responsabilit&agrave; &egrave; tua).</p>
       </div>
       <label class="f" for="net-url">Indirizzo (https://&hellip;) di un file o di un archivio</label>
@@ -494,55 +563,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       <div class="dim" id="net-status" role="status" aria-live="polite" style="margin-top:4px"></div>
       <div class="sep fh" style="margin-bottom:0"><b>Copertine dei giochi</b><button type="button" class="help" aria-expanded="false" aria-controls="h-covers" aria-label="Aiuto: copertine" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-covers" hidden>
-        <p>Immagini PNG, JPEG, WebP o GIF (anche in uno zip), abbinate al gioco per titolo (per esempio &laquo;Killer Bees.png&raquo;; anno e paese tra parentesi nel nome aiutano a distinguere le versioni). Si caricano con &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; (anche molte insieme: selezionale tutte nella cartella) o trascinandole sulla pagina.</p>
+        <p>Immagini PNG, JPEG, WebP o GIF (anche in uno zip), abbinate al gioco per titolo (per esempio &laquo;Killer Bees.png&raquo;; anno e paese tra parentesi nel nome aiutano a distinguere le versioni). Si caricano con &laquo;Aggiungi file&hellip;&raquo; in alto (anche molte insieme: selezionale tutte nella cartella) o trascinandole sulla pagina.</p>
         <p>Restano nel browser finch&eacute; la pagina &egrave; aperta: non entrano nella sessione e non vengono inviate.</p>
       </div>
       <div class="row"><button type="button" id="b-covers-clear" disabled>Svuota copertine</button></div>
       <div class="dim" id="covers-info" data-dyn style="margin-top:6px"></div>
-    </details>
-    <details id="d-look">
-      <summary>Aspetto (filtri da tubo catodico)</summary>
-      <label class="f" for="look-preset">Filtri da tubo catodico</label>
-      <select id="look-preset">
-        <option value="esatto">Nessun filtro (immagine esatta)</option>
-        <option value="leggero">Tubo catodico, leggero</option>
-        <option value="anni80">Tubo catodico anni &rsquo;80</option>
-        <option value="custom">Personalizzato</option>
-      </select>
-      <div class="sl"><label for="look-blur">Sfocatura del segnale</label><input type="range" id="look-blur" min="0" max="100" step="1"><output data-dyn id="look-blur-v" for="look-blur">0</output></div>
-      <div class="sl"><label for="look-persist">Persistenza del fosforo</label><input type="range" id="look-persist" min="0" max="90" step="1"><output data-dyn id="look-persist-v" for="look-persist">0</output></div>
-      <div class="sl"><label for="look-glow">Alone</label><input type="range" id="look-glow" min="0" max="100" step="1"><output data-dyn id="look-glow-v" for="look-glow">0</output></div>
-      <div class="sl"><label for="look-scan">Righe di scansione</label><input type="range" id="look-scan" min="0" max="100" step="1"><output data-dyn id="look-scan-v" for="look-scan">0</output></div>
-      <div class="sl"><label for="look-mask">Maschera (punti rosso, verde, blu)</label><input type="range" id="look-mask" min="0" max="100" step="1"><output data-dyn id="look-mask-v" for="look-mask">0</output></div>
-      <div class="sl"><label for="look-curve">Curvatura dello schermo</label><input type="range" id="look-curve" min="0" max="100" step="1"><output data-dyn id="look-curve-v" for="look-curve">0</output></div>
-      <label class="f" for="look-detail">Dettaglio (righe, maschera e curvatura)</label>
-      <select id="look-detail"><option value="3">3 &times; 3 pixel per punto</option><option value="4">4 &times; 4 pixel per punto (pi&ugrave; pesante)</option></select>
-      <div class="dim" id="look-info" data-dyn style="margin-top:6px"></div>
-    </details>
-    <details id="d-keys">
-      <summary>Tasti, joystick e gamepad</summary>
-      <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-keys" aria-label="Aiuto: tasti, joystick e gamepad" title="Aiuto">?</button></div>
-      <div class="helpbox" id="h-keys" hidden>
-        <p>Tastiera della console: cifre, lettere, <kbd>Spazio</kbd>, <kbd>Invio</kbd> (ENT), <kbd>Esc</kbd> o <kbd>Canc</kbd> (CLR), <kbd>+ - * / = . ? :</kbd>.
-          Scorciatoie: <kbd>F8</kbd> pausa, <kbd>F9</kbd> reset console, <kbd>F10</kbd> schermo intero.</p>
-        <p>Gamepad: croce o levetta sinistra = direzioni; A, B, X, Y o i dorsali = fuoco; Start = ENT; Indietro = CLR. Se il gamepad non compare, collegalo e premi un suo tasto (il browser lo mostra solo dopo la prima pressione).</p>
-      </div>
-      <div class="row">
-        <button id="p-tastierino">Joystick 2 sul tastierino</button><button id="p-portatile">Joystick 2 su I J K L (portatile)</button>
-      </div>
-      <table class="keys" id="keytab"><thead><tr><th>Azione</th><th>Joystick 1</th><th>Joystick 2</th></tr></thead><tbody data-dyn></tbody></table>
-      <div class="dim" id="cap-note" style="margin-top:4px"></div>
-      <label class="f" for="pad1">Gamepad per il joystick 1</label>
-      <select id="pad1" data-dyn></select>
-      <label class="f" for="pad2">Gamepad per il joystick 2</label>
-      <select id="pad2" data-dyn></select>
-      <div class="dim" id="pad-info" data-dyn style="margin-top:4px"></div>
-      <div class="row"><label><input type="checkbox" id="vk"> Tastiera a schermo</label></div>
-      <label class="f" for="tmode">Comandi a tocco (joystick e fuoco sullo schermo)</label>
-      <select id="tmode"><option value="auto">Automatici (se lo schermo &egrave; tattile)</option><option value="on">Sempre</option><option value="off">Mai</option></select>
-      <label class="f" for="tstick">Joystick a tocco</label>
-      <select id="tstick"><option value="cross">Croce fissa</option><option value="float">Segue il dito</option></select>
-      <div class="dim" style="margin-top:4px">Il joystick a tocco muove il joystick 1 (con &laquo;Scambia comandi 1-2&raquo; il 2). Queste due scelte non si ricordano alla prossima apertura.</div>
     </details>
     <details id="d-chars">
       <summary>Editor dei caratteri (set GPL e personalizzati)</summary>
@@ -551,7 +576,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
         <p>La pagina contiene un set di caratteri <b>GPL disegnato da zero</b>, cos&igrave; si pu&ograve; giocare anche senza l&rsquo;originale. Qui lo puoi ritoccare: la modifica si vede subito nel gioco in corso (senza riavviare), si salva come file .bin e si pu&ograve; riaprire. Puoi anche aprire il set originale e correggerlo carattere per carattere.</p>
         <p>Disegno: clic accende o spegne (il primo punto decide); Maiusc o tasto destro spegne. Con la tastiera: frecce per muoversi, spazio o Invio per accendere o spegnere.</p>
         <p>&laquo;Scarica da O2EM (GitHub)&raquo; legge il sorgente pubblico di O2EM da <code>raw.githubusercontent.com</code> (non invia nessun dato tuo; la pagina lo fa gi&agrave; da sola all&rsquo;apertura, salvo con <code>?offline</code>) e mette il set in uso subito; non resta nel codice di questa pagina. Salvalo poi con &laquo;Salva il set (.bin)&raquo;.</p>
-        <p>Per riaprire un set (un .bin di 512 o 2560 byte, uno zip che lo contiene, oppure un sorgente C <code>.c</code> / <code>.h</code> / <code>.txt</code> con la tabella) usa &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; (o trascinalo sulla pagina). Il set resta nel browser; i file salvati sono tuoi.</p>
+        <p>Per riaprire un set (un .bin di 512 o 2560 byte, uno zip che lo contiene, oppure un sorgente C <code>.c</code> / <code>.h</code> / <code>.txt</code> con la tabella) usa &laquo;Aggiungi file&hellip;&raquo; in alto (o trascinalo sulla pagina). Il set resta nel browser; i file salvati sono tuoi.</p>
       </div>
       <div class="row" role="group" aria-label="Quale set modificare">
         <button type="button" id="ce-k-vdc" aria-pressed="true">Chip video 8244/8245 (64 caratteri)</button>
@@ -591,7 +616,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
         <summary>Come ricavare i set di caratteri originali</summary>
         <p>I set originali sono dati dei chip (non fanno parte del BIOS): questa pagina non li contiene: li legge da GitHub (O2EM) all&rsquo;apertura, se c&rsquo;&egrave; connessione. Se non ci riesce, tre strade, dalla pi&ugrave; semplice:</p>
         <ol>
-          <li><b>O2EM</b> (la via pi&ugrave; semplice). Nel sorgente C di O2EM il set del chip video &egrave; una tabella di 512 byte, <code>cset[512]</code> nel file <code>src/cset.c</code> (controllato sul sorgente pubblicato su GitHub nella versione <code>libretro-o2em</code>: github.com/libretro/libretro-o2em). Pi&ugrave; semplice: premi i pulsanti <b>&laquo;Scarica &hellip; da GitHub&raquo;</b> in &laquo;Macchina e giochi&raquo; (o &laquo;Scarica da O2EM&raquo; qui sopra). A mano: apri <a href="https://github.com/libretro/libretro-o2em/blob/master/src/cset.c" target="_blank" rel="noopener noreferrer">github.com/libretro/libretro-o2em/blob/master/src/cset.c</a> (set del chip video; per l&rsquo;EF9341 del G7400: <a href="https://github.com/libretro/libretro-o2em/blob/master/src/vpp_cset.c" target="_blank" rel="noopener noreferrer">src/vpp_cset.c</a>), salva il file con &laquo;Raw&raquo; (o scarica lo zip del sorgente), poi aggiungilo con &laquo;Aggiungi file&hellip;&raquo; in &laquo;Macchina e giochi&raquo; (il <code>.c</code> va bene cos&igrave; com&rsquo;&egrave;): la pagina trova la tabella da sola e scrive &laquo;set riconosciuto&raquo;. (I link si aprono solo se li clicchi; se il sito cambia i nomi dei file, cerca &laquo;libretro-o2em&raquo; su GitHub.) Subito dopo premi &laquo;Salva il set (.bin)&raquo;: ottieni il tuo <code>charset_i8244.bin</code>, da riusare in futuro come gli altri file. Da riga di comando: <code>python3 tools/extract_charset.py CARTELLA_DEL_SORGENTE -o charset_i8244.bin</code>. Il sorgente di O2EM ha la sua licenza (Artistic License 2.0): il file che ne ricavi &egrave; per te.</li>
+          <li><b>O2EM</b> (la via pi&ugrave; semplice). Nel sorgente C di O2EM il set del chip video &egrave; una tabella di 512 byte, <code>cset[512]</code> nel file <code>src/cset.c</code> (controllato sul sorgente pubblicato su GitHub nella versione <code>libretro-o2em</code>: github.com/libretro/libretro-o2em). Pi&ugrave; semplice: premi i pulsanti <b>&laquo;Scarica &hellip; da GitHub&raquo;</b> in &laquo;Macchina e file&raquo; (o &laquo;Scarica da O2EM&raquo; qui sopra). A mano: apri <a href="https://github.com/libretro/libretro-o2em/blob/master/src/cset.c" target="_blank" rel="noopener noreferrer">github.com/libretro/libretro-o2em/blob/master/src/cset.c</a> (set del chip video; per l&rsquo;EF9341 del G7400: <a href="https://github.com/libretro/libretro-o2em/blob/master/src/vpp_cset.c" target="_blank" rel="noopener noreferrer">src/vpp_cset.c</a>), salva il file con &laquo;Raw&raquo; (o scarica lo zip del sorgente), poi aggiungilo con &laquo;Aggiungi file&hellip;&raquo; in alto (il <code>.c</code> va bene cos&igrave; com&rsquo;&egrave;): la pagina trova la tabella da sola e scrive &laquo;set riconosciuto&raquo;. (I link si aprono solo se li clicchi; se il sito cambia i nomi dei file, cerca &laquo;libretro-o2em&raquo; su GitHub.) Subito dopo premi &laquo;Salva il set (.bin)&raquo;: ottieni il tuo <code>charset_i8244.bin</code>, da riusare in futuro come gli altri file. Da riga di comando: <code>python3 tools/extract_charset.py CARTELLA_DEL_SORGENTE -o charset_i8244.bin</code>. Il sorgente di O2EM ha la sua licenza (Artistic License 2.0): il file che ne ricavi &egrave; per te.</li>
           <li><b>MAME.</b> Le raccolte di ROM di MAME tengono il set come file separato dal BIOS: <code>charset_i8244.bin</code> (512 byte) per il chip video, <code>charset_ef9340_1.rom</code> (2560 byte) per il Videopac+ G7400 (in MAME &egrave; segnato come dump &laquo;cattivo&raquo;: ricavato dal datasheet, non letto dal chip). Di solito stanno in un piccolo zip col nome del chip (<code>i8244</code>, <code>ef9340_1</code>). Aggiungilo con &laquo;Aggiungi file&raquo; insieme agli altri file. Il CRC-32 del primo, <code>b46a3f31</code> (dichiarato da MAME), &egrave; <b>lo stesso</b> del set di O2EM: due fonti indipendenti concordano. Anche il CRC <code>8de85988</code> della ROM EF9341 coincide con quello ricavato da O2EM. <i>I nomi dei file nelle raccolte di MAME non li ho potuti controllare su una copia: DA VERIFICARE.</i></li>
           <li><b>ROM dell&rsquo;EF9341 (Videopac+ G7400).</b> Il file <code>src/vpp_cset.c</code> di O2EM contiene la ROM come tabella di 2 &times; 1280 valori con i bit scritti al contrario: l&rsquo;editor li rimette in ordine e, se l&rsquo;impronta coincide con quella di MAME (CRC-32 <code>8de85988</code>, <b>verificato</b>: O2EM e MAME hanno gli stessi dati), la accetta. Attenzione: &egrave; ricavata dal datasheet del chip, non letta dal chip vero (MAME la segna come dump &laquo;cattivo&raquo;).</li>
           <li><b>Altri emulatori</b> con il set in un file a parte o in una tabella: vale lo stesso, purch&eacute; il file sia di 512 byte (chip video) o 2560 byte (EF9341), oppure contenga una tabella C di quella lunghezza.</li>
@@ -610,6 +635,8 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
         Testo ufficiale della licenza: <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer">gnu.org/licenses/gpl-3.0</a> (il link si apre solo se lo clicchi).</p>
       <p>Il <b>catalogo delle cartucce</b> (numeri Videopac, cataloghi, titoli nelle varie lingue, rarit&agrave;, segnalazione &laquo;solo Videopac+&raquo;) viene dalla lista <i>Videopac/Odyssey2 Cartridge list</i> v0.74 (28/01/2006) di <b>Maurice Simon</b> &lt;maurice@videopac.info&gt; (<a href="https://www.renelips.nl" target="_blank" rel="noopener noreferrer">www.renelips.nl</a>): l&rsquo;autore permette di copiarla, intera o in parte, senza scopo di lucro e citandolo. Quei dati <b>non</b> sono coperti dalla GPL del codice. I nomi delle ROM sono quelli della lista software di MAME (CC0).</p>
       <div id="photo-credits" data-dyn class="dim" style="display:none"></div>
+      <p>O2web &egrave; gratuito e a codice aperto. Se ti &egrave; utile e vuoi sostenere il progetto, puoi farmi un regalo dalla mia lista dei desideri su Amazon: &egrave; facoltativo e non cambia niente nel programma.</p>
+      <p class="dim">Il link si apre in un&rsquo;altra scheda solo se lo clicchi: la pagina non contatta Amazon.</p>
       <details>
         <summary>Testo completo della licenza (GPL-3.0, in inglese)</summary>
         <pre class="gpl" id="gpl-text" tabindex="0">/*__LICENSE__*/</pre>
@@ -617,9 +644,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
     </details>
     <section id="d-don" class="static" aria-labelledby="don-h">
       <h2 id="don-h">Donazioni</h2>
-      <p>O2web &egrave; gratuito e a codice aperto. Se ti &egrave; utile e vuoi sostenere il progetto, puoi farmi un regalo dalla mia lista dei desideri su Amazon: &egrave; facoltativo e non cambia niente nel programma.</p>
-      <p><a class="don-link" id="don-link" href="https://www.amazon.it/hz/wishlist/dl/invite/AQICAHgv7cct2SGZ58TbNYwiFrb-8NeSw0t4jGZKtponcI7CSwEmMKXjbP0B9o5djm62xJUNAAAAkTCBjgYJKoZIhvcNAQcGoIGAMH4CAQAweQYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAzKetxG4LAarjsCG1ACARCATPfJzfeSbzYEJJQLZYBWgnMKZT4GIgbqvEfj77j5OTYvrfWUs75qdk6K3LLvkggcmE0iTJ8X4oyFdZW-2eLkvPBhQaCjBET79Fwoy9w?ref_=wl_share" target="_blank" rel="noopener noreferrer">Lista dei desideri su Amazon</a></p>
-      <p class="dim">Il link si apre in un&rsquo;altra scheda solo se lo clicchi: la pagina non contatta Amazon.</p>
+      <a class="don-link" id="don-link" href="https://www.amazon.it/hz/wishlist/dl/invite/AQICAHgv7cct2SGZ58TbNYwiFrb-8NeSw0t4jGZKtponcI7CSwEmMKXjbP0B9o5djm62xJUNAAAAkTCBjgYJKoZIhvcNAQcGoIGAMH4CAQAweQYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAzKetxG4LAarjsCG1ACARCATPfJzfeSbzYEJJQLZYBWgnMKZT4GIgbqvEfj77j5OTYvrfWUs75qdk6K3LLvkggcmE0iTJ8X4oyFdZW-2eLkvPBhQaCjBET79Fwoy9w?ref_=wl_share" target="_blank" rel="noopener noreferrer">Lista dei desideri su Amazon</a>
     </section>
     <div id="info"></div>
   </aside>

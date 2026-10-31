@@ -46,7 +46,7 @@ with sync_playwright() as p:
 
     # ---- posto e etichette
     inside = pg.evaluate("() => ['b-swap', 'b-crt'].map(id => !!document.querySelector('#plate #' + id))")
-    check(inside == [True, True], "i due pulsanti stanno nella barra dei comandi sotto lo schermo")
+    check(inside == [True, False] and pg.evaluate("() => !!document.querySelector('header #b-crt')"), "«Scambia» sta nella barra dei comandi sotto lo schermo; «Filtri CRT» nella barra in alto (tappa 8c)")
     below = pg.evaluate("() => document.getElementById('b-swap').getBoundingClientRect().top > document.getElementById('screen').getBoundingClientRect().bottom")
     check(below, "...e sono sotto lo schermo")
     legs = pg.evaluate("() => [...document.querySelectorAll('#plate .pgrp > .leg')].map(l => l.textContent)")
@@ -55,7 +55,7 @@ with sync_playwright() as p:
     check(pg.evaluate("() => document.getElementById('vkeys').classList.contains('on') && document.getElementById('vk').checked") and pg.get_attribute("#b-vk", "aria-pressed") == "true", "tasto «Tastiera» della barra: mostra la tastiera a schermo")
     pg.click("#b-vk")
     check(pg.evaluate("() => !document.getElementById('vkeys').classList.contains('on')") and pg.get_attribute("#b-vk", "aria-pressed") == "false", "tasto «Tastiera» della barra: la nasconde")
-    check(pg.evaluate("() => document.getElementById('b-crt').parentElement.contains(document.getElementById('b-full'))"), "«Filtri CRT» e' nel gruppo «Schermo», accanto a «Schermo intero»")
+    check(pg.evaluate("() => document.getElementById('b-crt').getBoundingClientRect().bottom <= document.querySelector('header').getBoundingClientRect().bottom"), "«Filtri CRT» e' sempre in vista, nella barra in alto")
     check(pg.inner_text("#b-swap .kl") == "Swap controls 1-2" and pg.inner_text("#b-crt .kl") == "CRT filters", "etichette in inglese: %r / %r" % (pg.inner_text("#b-swap .kl"), pg.inner_text("#b-crt .kl")))
     check(pg.inner_text("#b-swap .ks") == "normal" and pg.inner_text("#b-crt .ks") == "off", "stato in inglese: %r / %r" % (pg.inner_text("#b-swap .ks"), pg.inner_text("#b-crt .ks")))
     check(pg.get_attribute("#b-swap", "aria-pressed") == "false", "scambio spento all'apertura")

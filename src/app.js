@@ -590,7 +590,7 @@ class App {
     if (gameRec && gameRec.chess && z80 && !(biosRec.known && biosRec.known.system === 'g7400')) opts.chessRom = z80;     // modulo scacchi C7010: solo G7000 / G7200
     if (biosRec.known && biosRec.known.system === 'g7400') {            // Videopac+ G7400: EF9340/41 con il suo set di caratteri e il pin B
       const ef = over ? over.efCharset || this.fallbackEfCharset : this.activeEfCharset;
-      if (!ef) throw new Error('il Videopac+ G7400 ha bisogno del set di caratteri dell’EF9341 (2560 byte): aggiungilo con «Aggiungi file» in «Macchina e giochi»');
+      if (!ef) throw new Error('il Videopac+ G7400 ha bisogno del set di caratteri dell’EF9341 (2560 byte): aggiungilo con «Aggiungi file» in alto');
       opts.g7400 = true;
       opts.efRom = ef;
       opts.cartBHigh = this.pinBFor(gameRec, over ? over.pinB : null);
@@ -664,11 +664,11 @@ class App {
       if (this.memorize(true)) this.msg(T('Stato di «{name}» memorizzato.', {name: this.game.display}), '');
     }
     const notes = [];
-    if (!this.charset) notes.push(T('Si usa il set di caratteri GPL incluso nella pagina (512 byte, disegnato da zero): va bene per il menu, ma i simboli speciali di alcuni giochi non coincidono e certi giochi possono risultare ingiocabili. Puoi correggerlo nell’«Editor dei caratteri» o aggiungere l’originale in «Macchina e giochi».'));
-    if (con.g7400 && !this.efCharset) notes.push(T('Si usa la ROM dei caratteri GPL dell’EF9341 inclusa nella pagina (2560 byte, disegnata da zero): i testi del G7400 si leggono, ma i disegni non sono identici a quelli del chip. Puoi ritoccarla nell’«Editor dei caratteri» o aggiungere l’originale in «Macchina e giochi».'));
+    if (!this.charset) notes.push(T('Si usa il set di caratteri GPL incluso nella pagina (512 byte, disegnato da zero): va bene per il menu, ma i simboli speciali di alcuni giochi non coincidono e certi giochi possono risultare ingiocabili. Puoi correggerlo nell’«Editor dei caratteri» o aggiungere l’originale in «Macchina e file».'));
+    if (con.g7400 && !this.efCharset) notes.push(T('Si usa la ROM dei caratteri GPL dell’EF9341 inclusa nella pagina (2560 byte, disegnata da zero): i testi del G7400 si leggono, ma i disegni non sono identici a quelli del chip. Puoi ritoccarla nell’«Editor dei caratteri» o aggiungere l’originale in «Macchina e file».'));
     if (game && game.chess) {
       if (con.g7400) notes.push(T('Il modulo scacchi C7010 e’ per il G7000 / G7200: sul Videopac+ G7400 non funziona. Scegli un BIOS G7000.'));
-      else if (!con.chess) notes.push(T('Il modulo scacchi C7010 ha bisogno anche della ROM da 8 KB dello Z80 (di solito z80_c7010.bin): aggiungila con «Aggiungi file» in «Macchina e giochi». Senza, si vede la scacchiera ma il modulo non risponde.'));
+      else if (!con.chess) notes.push(T('Il modulo scacchi C7010 ha bisogno anche della ROM da 8 KB dello Z80 (di solito z80_c7010.bin): aggiungila con «Aggiungi file» in alto. Senza, si vede la scacchiera ma il modulo non risponde.'));
       else if (this.settings.standard === 'NTSC') notes.push(T('Il modulo scacchi C7010 era venduto solo in Europa (PAL): in NTSC la scacchiera puo’ risultare disegnata male.'));
     }
     if (!game) notes.push(T('Nessuna cartuccia: senza cartuccia il BIOS puo’ lasciare lo schermo nero. Scegli un gioco dall’elenco.'));
@@ -761,7 +761,7 @@ class App {
         return;
       }
       if (!this.machineCandidates('g7400').length) {
-        this.msg(T('Questo gioco e’ segnato «solo Videopac+» nella lista delle cartucce, ma manca il BIOS del Videopac+ G7400: aggiungilo con «Aggiungi file» in «Macchina e giochi».'), 'warn');
+        this.msg(T('Questo gioco e’ segnato «solo Videopac+» nella lista delle cartucce, ma manca il BIOS del Videopac+ G7400: aggiungilo con «Aggiungi file» in alto.'), 'warn');
         return;
       }
       const prev = cur;

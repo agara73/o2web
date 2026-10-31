@@ -87,6 +87,7 @@ with sync_playwright() as p:
     check(rows(pg) == 3, "per nome: nessuna intestazione, stesse voci (%d)" % rows(pg))
     pg.select_option("#order-sel", "device")
     pg.wait_for_function("() => document.querySelectorAll('#games li.hd').length === 2", timeout=5000)
+    pg.evaluate("() => { document.getElementById('d-machine').open = true; }")      # il cambio automatico sta in «Macchina e file»
     check(pg.get_attribute("#b-auto", "aria-pressed") == "true", "interruttore del cambio macchina automatico acceso")
     pg.click("#b-auto")
     pg.wait_for_function("() => document.getElementById('b-auto').getAttribute('aria-pressed') === 'false'", timeout=5000)
@@ -94,6 +95,7 @@ with sync_playwright() as p:
     pg.click("#b-auto")
     pg.wait_for_function("() => document.getElementById('b-auto').getAttribute('aria-pressed') === 'true'", timeout=5000)
     check(pg.get_attribute("#b-auto", "aria-pressed") == "true" and pg.evaluate("() => window.o2web.app.autoMachine") is True, "un altro clic lo riaccende")
+    pg.evaluate("() => { document.getElementById('d-games').open = true; }")
     # anteprime: calcolate per le righe visibili
     pg.wait_for_function("() => window.o2web.app.previews.stats().ready >= 2 && window.o2web.app.previews.stats().pending === 0", timeout=30000)
     st = pg.evaluate("() => window.o2web.app.previews.stats()")
