@@ -679,3 +679,17 @@ Emulazione 3,3 ms per fotogramma (non e' la CPU il limite). Movimento fluido (50
 **Provato sul telefono vero (Motorola Edge 60 Pro, Chrome, 31/10/2026): funziona** (esito riferito dall'utente, senza dettagli: orientamento orizzontale non verificato).
 **Da verificare.** Orientamento orizzontale con il cassetto; iPhone / Safari (`inert`, `100vh`); accessibilita' da tastiera (focus nel cassetto: non rimandato al pulsante all'apertura).
 **Chiusura (31/10/2026): TAPPA 8b CHIUSA** (push da fare con l'ok dell'utente).
+
+## Tappa 8c - interfaccia piu' funzionale e facile da usare (piano approvato il 31/10/2026)
+**Origine.** Dopo la 8b l'utente chiede che le voci secondarie del cassetto non siano le prime visibili (esempio: «Macchina e giochi» da dividere in «Giochi» e «Macchina e file», perche' alla lista dei giochi resta poco spazio) e vuole un lavoro pianificato, non singole modifiche. Regola: prima il piano e le bozze approvate, poi il codice; un passo alla volta, ognuno con prove e commit suoi.
+**Fasi.**
+0. *Scenari d'uso* (con l'utente): 5-6 scenari reali (aggiungere BIOS e giochi, scegliere e giocare, riprendere una partita, salvare / ricaricare lo stato, cambiare macchina, telefono in orizzontale) e che cosa da' fastidio in ognuno.
+1. *Verifica dello stato attuale* (solo lettura): scenari su computer, telefono verticale e orizzontale; elenco dei problemi con gravita' e costo; accessibilita' di base (focus da tastiera, contrasti, etichette).
+2. *Struttura* (su carta): primario / secondario, ordine delle voci, divisione di «Macchina e giochi», che cosa sta sempre in vista, che cosa succede alla prima apertura (senza BIOS ne' giochi).
+3. *Bozze HTML locali* per computer e telefono, senza giochi, da approvare prima del codice.
+4. *Realizzazione a piccoli passi* (struttura, poi lista dei giochi, poi rifiniture), batteria verde e `check_release.py` a ogni passo; push solo con l'ok dell'utente.
+5. *Verifica sui dispositivi veri* con una lista di controllo ricavata dagli scenari.
+**Sessioni.** A: fasi 0-1; B: fasi 2-3; C...: fase 4; poi fase 5. Posizione: prima della tappa 9 (consigliata, perche' la PWA si usa soprattutto dal telefono); l'ordine lo decide l'utente.
+**Vincoli invariati.** Pagina unica, niente `localStorage`, dialoghi inline, testi anche in inglese (`lang_en_dom.js`), cassetto a un pannello alla volta salvo ripensamenti nella fase 2.
+**Aperti.** Divisione proposta (non ancora decisa): «Giochi» (ricerca, cartella, ordinamento, copertina, lista, pulsanti) per prima; «Macchina e file» (macchina, cambio automatico, avanzate, zona file, chip, set di caratteri) piu' in basso. Che voce si apre alla prima apertura: da decidere.
+**Stato (31/10/2026): piano scritto, fase 0 da iniziare.**
