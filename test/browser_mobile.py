@@ -127,9 +127,9 @@ with sync_playwright() as p:
     pg.wait_for_function("() => document.querySelectorAll('#games li:not(.hd)').length >= 1", timeout=15000)
     pg.tap("#d-games > summary")
     pg.wait_for_timeout(300)
-    rw = pg.evaluate("""() => { const li = document.querySelector('#games li:not(.hd)'); const x = li.querySelector('button.s[data-act=remove]').getBoundingClientRect();
-      return {h: li.getBoundingClientRect().height, xw: x.width, xh: x.height, extra: [...li.querySelectorAll('.c, .a, .cf')].filter(e => getComputedStyle(e).display !== 'none').length, opts: document.getElementById('listopts').open}; }""")
-    check(rw["xw"] >= 44 and rw["xh"] >= 44 and rw["h"] <= 70 and rw["extra"] == 0 and not rw["opts"], "elenco sul telefono: riga compatta (%.0f px), × da 44 px, «Opzioni elenco» chiuso (%s)" % (rw["h"], rw))
+    rw = pg.evaluate("""() => { const li = document.querySelector('#games li:not(.hd)'); const x = li.querySelector('button.s[data-act=remove]').getBoundingClientRect(), f = li.querySelector('button.s[data-act=fav]').getBoundingClientRect();
+      return {h: li.getBoundingClientRect().height, xw: x.width, xh: x.height, fw: f.width, fh: f.height, extra: [...li.querySelectorAll('.c, .a, .cf')].filter(e => getComputedStyle(e).display !== 'none').length, opts: document.getElementById('listopts').open}; }""")
+    check(rw["xw"] >= 44 and rw["xh"] >= 44 and rw["fw"] >= 44 and rw["fh"] >= 44 and rw["h"] <= 70 and rw["extra"] == 0 and not rw["opts"], "elenco sul telefono: riga compatta (%.0f px), ★ e × da 44 px, «Opzioni elenco» chiuso (%s)" % (rw["h"], rw))
     pg.tap("#d-look > summary")
     pg.wait_for_timeout(300)
     check(pg.evaluate("() => [...document.querySelectorAll('#panel > details[open]')].map(d => d.id).join()") == "d-look", "un solo pannello alla volta: aprendo «Aspetto» si chiude «Macchina e giochi»")

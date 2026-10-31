@@ -113,37 +113,37 @@ button.small { padding: 2px 8px; font-size: .8rem; }
 .dim { color: var(--dim); font-size: .82rem; }
 .drop { border: 1px dashed var(--line); border-radius: 5px; padding: 8px; margin-top: 6px; text-align: center; color: var(--dim); font-size: .85rem; }
 .drop.over { border-color: var(--acc); color: var(--txt); }
-#games { list-style: none; margin: 8px 0 0; padding: 0; max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 5px; background: #181c25; }
-#games li { display: flex; gap: 4px; align-items: stretch; border-bottom: 1px solid #232836; }
-#games li:last-child { border-bottom: 0; }
-#games li.cur { background: #1f2b44; }
-#games button.g { flex: 1; text-align: left; background: transparent; border: 0; border-radius: 0; padding: 5px 8px; min-width: 0; }
-#games button.g:hover { background: #232b3d; }
-#games .t { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#games .m { display: block; color: var(--dim); font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#games .w { color: var(--warn); }
-#games button.s { background: transparent; border: 0; border-radius: 0; padding: 0 8px; color: var(--dim); }
-#games button.s.mem { color: var(--good); }
-#games canvas.pv { width: 72px; height: 49px; align-self: center; margin-left: 6px; border-radius: 2px; background: #0b0d12; flex: none; }
-#games .sg { color: var(--acc); font-weight: 600; }
-#games .n { color: var(--dim); font-size: .72rem; border: 1px solid var(--line); border-radius: 9px; padding: 0 5px; margin-left: 6px; }
-#games .c { display: block; color: var(--dim); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#games .c .pl { color: var(--acc); }
-#games .cf { display: block; color: var(--warn); font-size: .72rem; }
-#games li.hd { list-style: none; position: sticky; top: 0; background: var(--panel); color: var(--dim); font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 6px 4px 2px; border-bottom: 1px solid var(--line); }
-#games li.hd .n { margin-left: 6px; font-weight: 400; }
-#games .a { display: block; color: var(--dim); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gl { list-style: none; margin: 8px 0 0; padding: 0; max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 5px; background: #181c25; }
+.gl li { display: flex; gap: 4px; align-items: stretch; border-bottom: 1px solid #232836; }
+.gl li:last-child { border-bottom: 0; }
+.gl li.cur { background: #1f2b44; }
+.gl button.g { flex: 1; text-align: left; background: transparent; border: 0; border-radius: 0; padding: 5px 8px; min-width: 0; }
+.gl button.g:hover { background: #232b3d; }
+.gl .t { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gl .m { display: block; color: var(--dim); font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gl .w { color: var(--warn); }
+.gl button.s { background: transparent; border: 0; border-radius: 0; padding: 0 8px; color: var(--dim); }
+.gl button.s.mem { color: var(--good); }
+.gl canvas.pv { width: 72px; height: 49px; align-self: center; margin-left: 6px; border-radius: 2px; background: #0b0d12; flex: none; }
+.gl .sg { color: var(--acc); font-weight: 600; }
+.gl .n { color: var(--dim); font-size: .72rem; border: 1px solid var(--line); border-radius: 9px; padding: 0 5px; margin-left: 6px; }
+.gl .c { display: block; color: var(--dim); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gl .c .pl { color: var(--acc); }
+.gl .cf { display: block; color: var(--warn); font-size: .72rem; }
+.gl li.hd { list-style: none; position: sticky; top: 0; background: var(--panel); color: var(--dim); font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 6px 4px 2px; border-bottom: 1px solid var(--line); }
+.gl li.hd .n { margin-left: 6px; font-weight: 400; }
+.gl .a { display: block; color: var(--dim); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* righe dell'elenco compatte e bersagli del tocco (8c): su schermi piccoli 1-2 righe di testo, anteprima piccola, tasti da almeno 44 px */
-#games button.s { min-width: 44px; min-height: 44px; font-size: 1.1rem; }
+.gl button.s { min-width: 44px; min-height: 44px; font-size: 1.1rem; }
 @media (pointer: coarse) { button.help { position: relative; } button.help::after { content: ""; position: absolute; inset: -10px; } }
 @media (max-width: 700px), (orientation: landscape) and (max-height: 560px) {
-  #games .c, #games .a, #games .cf { display: none; }
-  #games canvas.pv { width: 56px; height: 38px; }
-  #games li img.th { width: 28px; height: 36px; }
-  #games button.g { padding: 4px 6px; }
+  .gl .c, .gl .a, .gl .cf { display: none; }
+  .gl canvas.pv { width: 56px; height: 38px; }
+  .gl li img.th { width: 28px; height: 36px; }
+  .gl button.g { padding: 4px 6px; }
 }
 #b-merge[aria-pressed=true], #b-previews[aria-pressed=true], #b-auto[aria-pressed=true] { border-color: var(--acc); color: var(--acc); }
-#games li img.th { width: 34px; height: 44px; object-fit: cover; align-self: center; margin-left: 6px; border-radius: 2px; background: #0b0d12; flex: none; }
+.gl li img.th { width: 34px; height: 44px; object-fit: cover; align-self: center; margin-left: 6px; border-radius: 2px; background: #0b0d12; flex: none; }
 figure.cover { margin: 8px 0 0; text-align: center; }
 figure.cover img { display: block; max-width: min(100%, 220px); max-height: 280px; margin: 0 auto; border-radius: 4px; border: 1px solid var(--line); background: #0b0d12; }
 figure.cover figcaption { font-size: .78rem; color: var(--dim); margin-top: 2px; word-break: break-word; }
@@ -295,6 +295,10 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
   #play:fullscreen { display: grid; }
   #play:fullscreen #stage { height: 100%; }
 }
+.shh { margin-top: 10px; color: var(--dim); font-size: .74rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+#favs { max-height: none; }
+.gl button.s.fav { color: var(--dim); } .gl button.s.fav[aria-pressed=true] { color: var(--warn); }
+#all-n { font-weight: 400; color: var(--dim); }
 </style>
 </head>
 <body>
@@ -423,9 +427,16 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
         <div><label class="f" for="folder">Cartella</label><select id="folder" data-dyn><option value="*">Tutte le cartelle</option></select></div>
         <div><label class="f" for="order-sel">Ordina per</label><select id="order-sel"><option value="device">Dispositivo e numero di cassetta</option><option value="name">Nome del gioco</option></select></div>
       </div>
-      <div class="dim" id="count" data-dyn style="margin-top:6px"></div>
-      <figure class="cover" id="cover" style="display:none"><img id="cover-img" alt=""><figcaption id="cover-cap"></figcaption></figure>
-      <ul id="games" data-dyn></ul>
+      <div id="short" hidden>
+        <div class="shh">Recenti e preferiti</div>
+        <ul id="favs" class="gl" data-dyn></ul>
+      </div>
+      <details class="adv" id="allgames" open>
+        <summary>Tutti i giochi <span id="all-n" data-dyn></span></summary>
+        <div class="dim" id="count" data-dyn style="margin-top:6px"></div>
+        <figure class="cover" id="cover" style="display:none"><img id="cover-img" alt=""><figcaption id="cover-cap"></figcaption></figure>
+        <ul id="games" class="gl" data-dyn></ul>
+      </details>
       <details class="adv" id="listopts">
         <summary>Opzioni elenco</summary>
         <div class="row"><button id="b-clearlib" disabled>Svuota elenco</button><button type="button" id="b-merge" aria-pressed="true" title="Mostra una voce sola per i file con lo stesso contenuto">Unisci giochi duplicati</button><button type="button" id="b-previews" aria-pressed="true" title="Piccola anteprima di una schermata di gioco">Anteprime</button><span class="dim" id="clear-note"></span></div>

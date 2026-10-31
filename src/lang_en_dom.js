@@ -57,6 +57,8 @@ module.exports = {
   "titolo, anno, editore, paese…": "title, year, publisher, country…",
   "Cartella": "Folder",
   "Opzioni elenco": "List options",
+  "Recenti e preferiti": "Recent and favourites",
+  "Tutti i giochi": "All games",
   "Svuota elenco": "Clear list",
   "Trascina qui i file, oppure usa «Aggiungi file…» in alto.": "Drag files here, or use “Add files…” at the top.",
   "Aggiungi file…": "Add files…",

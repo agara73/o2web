@@ -32,6 +32,7 @@ const {t: T} = require('./i18n.js');          // lingua: i messaggi si compongon
 const {findSetInFile, identify} = require('./charedit.js');
 
 const QUEUE_MAX = 1.0;            // s di audio in coda oltre i quali la coda si svuota (audio fermo, browser in difficolta')
+const MAX_FAVORITES = 500, MAX_RECENTS = 12, SHORT_MAX = 12;      // (tappa 8c) preferiti (nella sessione), ultimi giochi avviati, righe della lista corta
 const MIN_RESUME_FRAMES = 30;     // un gioco che ha girato meno di cosi' non sostituisce il proprio stato memorizzato
 
 // dimensioni della schermata: scale 0 = la piu' grande che sta nell'area (con integer = solo multipli interi, ma se nemmeno 1x ci sta si
@@ -88,6 +89,9 @@ class App {
     this.autoMachine = true;                         // cambio di macchina automatico: un gioco «solo Videopac+» (lista delle cartucce) avvia il G7400, uno normale riporta alla macchina di prima
     this.machineManual = false;                      // l'utente ha scelto a mano macchina o BIOS: il cambio automatico non tocca piu' niente (si toglie riaccendendo l'interruttore)
     this._autoPrev = null;                           // la macchina da cui si e' passati al G7400 in automatico (per tornarci)
+    this.favorites = [];                 // (tappa 8c) SHA-256 delle cartucce preferite: stanno nella sessione, nessun archivio del browser
+    this.recents = [];                   // le ultime cartucce avviate (la piu' recente per prima)
+    this.sessionRev = 0;                 // cresce a ogni sessione aperta (la pagina decide cosi' se mostrare la lista corta)
     this.listOrder = 'device';                       // ordine dell'elenco: 'device' = dispositivo e numero di cassetta, 'name' = per nome
     this.customLook = null;                          // i filtri personalizzati messi da parte dal pulsante «Filtri CRT» quando si passa a un insieme pronto (non si salvano nella sessione)
     this.lookRev = 0;                                // sale a ogni cambio dell'aspetto o della macchina (la pagina lo ridisegna senza rifare l'elenco)
@@ -523,6 +527,26 @@ class App {
     return true;
   }
   setMerge(on) { this.mergeDuplicates = !!on; this.changed(); return this.mergeDuplicates; }
+  // ---- preferiti e recenti (tappa 8c)
+  isFavorite(entry) { return entry.games.some((g) => this.favorites.includes(g.sha)); }
+  toggleFavorite(entry) {
+    if (this.isFavorite(entry)) { const s = new Set(entry.games.map((g) => g.sha)); this.favorites = this.favorites.filter((h) => !s.has(h)); }
+    else if (this.favorites.length >= MAX_FAVORITES) { this.msg(T('Troppi preferiti: toglierne qualcuno prima di aggiungerne altri.'), 'warn'); return false; }
+    else this.favorites.push(entry.rep.sha);
+    this.changed();
+    return true;
+  }
+  // lista corta: prima i preferiti (nell'ordine in cui sono stati scelti), poi i giochi usati di recente; solo cio' che e' nell'elenco
+  shortList() {
+    const byHash = new Map();
+    for (const en of this._entries()) for (const g of en.games) if (!byHash.has(g.sha)) byHash.set(g.sha, en);
+    const seen = new Set(), out = [];
+    for (const h of this.favorites.concat(this.recents)) {
+      const en = byHash.get(h);
+      if (en && !seen.has(en)) { seen.add(en); out.push(en); }
+    }
+    return out.slice(0, SHORT_MAX);
+  }
   // il membro della voce con una partita memorizzata (il primo), o null
   entryStateId(entry) { const id = entry.ids.find((i) => this.states.has(i)); return id === undefined ? null : id; }
   entryIsCurrent(entry) { return this.gameId !== null && entry.ids.includes(this.gameId); }
@@ -603,6 +627,8 @@ class App {
     if (this.audio) this.audio.detach();
     this.con = con;
     this.gameId = gameId;
+    const gm = gameId === null ? null : this.lib.getGame(gameId);
+    if (gm) this.recents = [gm.sha].concat(this.recents.filter((h) => h !== gm.sha)).slice(0, MAX_RECENTS);
     this.audio = null;
     if (this.sink) this.sink.flush();
     this.attachAudio();
@@ -965,8 +991,9 @@ class App {
 
   // ---------------------------------------------------------------- sessione (contiene i dump: file personale)
   currentSettings() {
+    const have = new Set(this.lib.games.map((g) => g.sha));          // si salvano solo preferiti e recenti ancora nell'elenco
     return {scale: this.settings.scale, aspect: this.settings.aspect, integer: this.settings.integer, volume: this.settings.volume, muted: this.settings.muted, pinB: this.settings.pinB, swapPads: !!this.settings.swapPads, bindings: this.input.bindings,
-      look: Object.assign({}, this.look), machine: this.machinePref};
+      look: Object.assign({}, this.look), machine: this.machinePref, favorites: this.favorites.filter((h) => have.has(h)), recents: this.recents.filter((h) => have.has(h))};
   }
 
   saveSession(created) {
@@ -1025,6 +1052,9 @@ class App {
     // tutto pronto: si sostituisce
     if (this.audio) this.audio.detach();
     this.lib = lib;
+    this.favorites = parsed.settings.favorites || [];
+    this.recents = parsed.settings.recents || [];
+    this.sessionRev++;
     this.states = restored.states;
     this.settings = settings;
     this.look = look2; this.machinePref = machineKind; this.lookRev++;

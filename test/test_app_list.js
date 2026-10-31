@@ -131,6 +131,26 @@ const waitFor = async (f, ms) => { const t = Date.now(); while (!f() && Date.now
   await a2.openFiles([{name: 'sessione.zip', bytes: sess}]);
   ok(a2.lib.games.length === app.lib.games.length && a2.mergeDuplicates === true && a2.previews.enabled === true, 'sessione riaperta: stessi giochi, fusione e anteprime accese (non si ricordano)');
   ok(a2.lib.names.size === 0 && a2.entryCount() >= 1, 'sessione riaperta: l\'elenco di nomi non e\' nella sessione');
+  // ---- (tappa 8c) preferiti e recenti: voce unita = un solo preferito per tutti i file uguali; nella sessione; i dump tolti spariscono
+  const fa = new App({onMessage() {}, sink: null, fallbackCharset: FALLBACK});
+  await fa.openFiles([rd('bios/o2rom.bin'), {name: 'a.zip', bytes: z}, bo, {name: 'Killer Bees 2.bin', bytes: kb.bytes}, pp]);
+  const fe = fa.listEntries('', null), eKb = fe.find((e) => e.count > 1), [eBo, ePp] = fe.filter((e) => e !== eKb);
+  eq([fa.shortList().length, fa.isFavorite(eKb)], [0, false], 'all inizio: lista corta vuota, nessun preferito');
+  ok(fa.toggleFavorite(eKb) && fa.isFavorite(eKb) && fa.favorites.length === 1, 'preferito aggiunto (una sola impronta per i 3 file uguali)');
+  ok(fa.startEntry(eBo) && fa.startEntry(ePp), 'avvio di due giochi');
+  eq(fa.shortList().map((e) => e.title), [eKb.title, ePp.title, eBo.title], 'lista corta: prima i preferiti, poi i recenti (il più recente per primo)');
+  ok(fa.startEntry(eBo) && fa.shortList().map((e) => e.title).join() === [eKb.title, eBo.title, ePp.title].join(), 'riavviare un gioco lo porta in cima ai recenti');
+  const fsess = fa.saveSession('2026-10-31');
+  const fb = new App({onMessage() {}, sink: null, fallbackCharset: FALLBACK});
+  await fb.openFiles([{name: 'sessione.zip', bytes: fsess}]);
+  eq([fb.favorites.length, fb.recents.length, fb.sessionRev], [1, 2, 1], 'sessione riaperta: preferiti e recenti tornano (e la sessione è contata)');
+  eq(fb.shortList().map((e) => e.rep.sha), fa.shortList().map((e) => e.rep.sha), 'sessione riaperta: stessa lista corta');
+  ok(fb.toggleFavorite(fb.shortList()[0]) && fb.favorites.length === 0 && !fb.isFavorite(fb.shortList()[0]), 'preferito tolto');
+  const fc = new App({onMessage() {}, sink: null, fallbackCharset: FALLBACK});
+  await fc.openFiles([rd('bios/o2rom.bin'), bo]);
+  fc.favorites = [eKb.rep.sha, 'f'.repeat(64)]; fc.recents = ['e'.repeat(64)];
+  const sc = fc.currentSettings();
+  ok(sc.favorites.length === 0 && sc.recents.length === 0, 'in sessione solo preferiti e recenti ancora nell elenco');
   const kbEntry = a2.listEntries('', null);
   ok(kbEntry.every((e) => e.title), 'voci con un titolo');
   console.log(bad ? 'FALLITI ' + bad + ' su ' + n : 'OK (' + n + ' controlli)');

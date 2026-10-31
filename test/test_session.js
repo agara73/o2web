@@ -58,6 +58,18 @@ const enc = new TextEncoder(), dec = new TextDecoder();
   p.bios.forEach((b, i) => ok(b.name === lib.bios[i].name && same(b.data, lib.bios[i].data), 'bios ' + i));
   ok(p.games[0].state && p.games[1].state === null && p.games[3].state && JSON.stringify(p.games[0].state) === JSON.stringify(states.get(lib.games[0].id)), 'stati');
   ok(same(p.charset, charset), 'set di caratteri');
+
+  // ---- (tappa 8c) preferiti e recenti: nella sessione, come impronte SHA-256; le sessioni di prima non li hanno e si aprono lo stesso
+  ok(p.settings.favorites === undefined && p.settings.recents === undefined, 'sessione senza preferiti ne recenti (come quelle di prima): nessun campo, nessun errore');
+  const hs = [lib.games[1].sha, lib.games[3].sha];
+  const pf = S.parseSession(S.buildSession(Object.assign({}, opts, {settings: Object.assign({}, settings, {favorites: hs.concat(hs[0]), recents: [hs[1], hs[0]]})})));
+  ok(same(pf.settings.favorites, hs) && same(pf.settings.recents, [hs[1], hs[0]]), 'preferiti (senza doppioni) e recenti: andata e ritorno nell ordine');
+  ok(same(S.checkSettings({favorites: []}).favorites, []), 'preferiti vuoti ammessi');
+  for (const bad of [{favorites: 'x'}, {favorites: ['abc']}, {favorites: [hs[0].toUpperCase()]}, {recents: [5]}, {recents: new Array(51).fill(hs[0])}, {favorites: new Array(501).fill(hs[0])}]) {
+    let thrown = false;
+    try { S.checkSettings(bad); } catch (e) { thrown = e instanceof S.SessionError; }
+    ok(thrown, 'impostazione rifiutata: ' + JSON.stringify(bad).slice(0, 40));
+  }
   ok(JSON.stringify(p.settings) === JSON.stringify(settings), 'impostazioni');
   const r = S.restoreLibrary(p);
   ok(r.lib.games.length === 5 && r.lib.getGame(r.activeGameId).name === lib.games[2].name && r.lib.getBios(r.activeBiosId).name === lib.bios[1].name, 'elenco ricostruito');

@@ -352,6 +352,120 @@ function catalogLine(e) {
   return c;
 }
 
+// una riga dell'elenco (which: 'all' = «Tutti i giochi», con anteprima; 'fav' = lista corta dei recenti e preferiti)
+function buildRow(e, idx, which) {
+  const pvOn = app.previews.enabled;
+  const g = e.metaGame;
+  const li = document.createElement('li');
+  li.dataset.i = String(idx);
+  li.dataset.list = which;
+  li.dataset.id = String(e.rep.id);                 // il dump che si avvia con un clic (gli altri dump uguali sono in e.ids)
+  if (app.entryIsCurrent(e)) li.className = 'cur';
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'g';
+  b.dataset.act = 'play';
+  const t = document.createElement('span');
+  t.className = 't';
+  if (e.sigla) {
+    const sg = document.createElement('span');
+    sg.className = 'sg';
+    sg.textContent = e.sigla;
+    t.appendChild(sg);
+    t.appendChild(document.createTextNode(' — ' + e.title));
+  } else t.textContent = e.title;
+  if (e.count > 1) {
+    const n = document.createElement('span');
+    n.className = 'n';
+    n.textContent = '×' + e.count;
+    n.title = T('{n} file con lo stesso contenuto', {n: e.count});
+    t.appendChild(n);
+  }
+  const m = document.createElement('span');
+  m.className = 'm';
+  const bits = [g.year, g.publisher, g.country, kb(e.rep.size)].filter(Boolean);
+  m.textContent = bits.join(' · ');
+  const warns = g.warn.map((w) => T(w)).concat(e.rep.map.ok ? [] : [T('non supportata ({kb} KB)', {kb: e.rep.map.banks * 2})]);
+  if (warns.length) {
+    const w = document.createElement('span');
+    w.className = 'w';
+    w.textContent = ' \u26A0 ' + warns.join(', ');
+    m.appendChild(w);
+  }
+  if (g.flags.length) m.appendChild(document.createTextNode(' [' + g.flags.join('][') + ']'));
+  b.title = e.games.map((x) => x.name + (x.folder ? ' · ' + x.folder : '')).slice(0, 12).join('\n') + (e.games.length > 12 ? '\n…' : '') + '\n' + T('clic: avvio a freddo');
+  b.appendChild(t);
+  b.appendChild(m);
+  if (e.cat) b.appendChild(catalogLine(e));
+  if (e.conflict) {                                    // il nome del file diceva un altro gioco: vale il contenuto (impronta SHA-1)
+    const cf = document.createElement('span');
+    cf.className = 'cf';
+    cf.textContent = '\u26A0 ' + T('il nome del file dice {a}, ma il contenuto è {b}: vale il contenuto', {a: e.conflict.name, b: e.conflict.content});
+    b.appendChild(cf);
+  }
+  if (e.others.length) {
+    const a = document.createElement('span');
+    a.className = 'a';
+    a.textContent = T('anche:') + ' ' + e.others.slice(0, 4).join(' · ') + (e.others.length > 4 ? ' · …' : '');
+    a.title = e.others.join('\n');
+    b.appendChild(a);
+  }
+  if (pvOn && which === 'all') {
+    const cv = document.createElement('canvas');
+    cv.className = 'pv';
+    cv.width = 80; cv.height = 54;
+    cv.setAttribute('role', 'img');
+    cv.setAttribute('aria-label', T('Anteprima di {name}', {name: e.label}));
+    const res = app.previewFor(e);
+    drawPreview(cv, res);
+    cv.title = previewTitle(res);
+    let l = ui.pvCanvases.get(e.rep.sha);
+    if (!l) ui.pvCanvases.set(e.rep.sha, l = []);
+    l.push(cv);
+    li.appendChild(cv);
+  }
+  const cv = app.covers.count ? e.games.map((x) => app.covers.forGame(x)).find(Boolean) : null;
+  if (cv) {
+    const im = document.createElement('img');
+    im.className = 'th'; im.alt = ''; im.decoding = 'async'; im.draggable = false; im.dataset.cover = String(cv.id);
+    const u = thumbUrl(cv);
+    if (u) im.src = u;
+    li.appendChild(im);
+  }
+  li.appendChild(b);
+  const stId = app.entryStateId(e);
+  if (stId !== null) {
+    const info = app.stateInfo(stId);
+    const r = document.createElement('button');
+    r.type = 'button';
+    r.className = 's mem';
+    r.dataset.act = 'resume';
+    r.textContent = '●';
+    r.title = T('Riprendi la partita memorizzata') + (info.sameBios ? '' : ' (' + T('BIOS diverso: {name}', {name: info.biosName || T('non in elenco')}) + ')');
+    r.setAttribute('aria-label', T('Riprendi la partita memorizzata di {name}', {name: e.title}));
+    li.appendChild(r);
+  }
+  const fv = document.createElement('button');
+  fv.type = 'button';
+  fv.className = 's fav';
+  fv.dataset.act = 'fav';
+  const isFav = app.isFavorite(e);
+  fv.textContent = isFav ? '\u2605' : '\u2606';
+  fv.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+  fv.title = isFav ? T('Togli dai preferiti') : T('Aggiungi ai preferiti');
+  fv.setAttribute('aria-label', (isFav ? T('Togli {name} dai preferiti') : T('Aggiungi {name} ai preferiti')).replace('{name}', e.title));
+  li.appendChild(fv);
+  const x = document.createElement('button');
+  x.type = 'button';
+  x.className = 's';
+  x.dataset.act = 'remove';
+  x.textContent = '×';
+  x.title = e.count > 1 ? T('Togli dall’elenco tutti i {n} file di questa voce', {n: e.count}) : T('Togli dall’elenco');
+  x.setAttribute('aria-label', T('Togli {name} dall’elenco', {name: e.title}));
+  li.appendChild(x);
+  return li;
+}
+
 function renderGames() {
   renderFolders();
   const fv = $('folder').value;
@@ -362,7 +476,6 @@ function renderGames() {
   const rows = list.slice(0, MAX_ROWS);
   ui.rows = rows;
   ui.pvCanvases = new Map();
-  const pvOn = app.previews.enabled;
   const frag = document.createDocumentFragment();
   // ordine per dispositivo: un'intestazione prima di ogni blocco (Odyssey2, Videopac, Videopac+, un blocco per editore)
   const heads = new Map();
@@ -382,106 +495,19 @@ function renderGames() {
       h.appendChild(hn);
       frag.appendChild(h);
     }
-    const g = e.metaGame;
-    const li = document.createElement('li');
-    li.dataset.i = String(idx);
-    li.dataset.id = String(e.rep.id);                 // il dump che si avvia con un clic (gli altri dump uguali sono in e.ids)
-    if (app.entryIsCurrent(e)) li.className = 'cur';
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'g';
-    b.dataset.act = 'play';
-    const t = document.createElement('span');
-    t.className = 't';
-    if (e.sigla) {
-      const sg = document.createElement('span');
-      sg.className = 'sg';
-      sg.textContent = e.sigla;
-      t.appendChild(sg);
-      t.appendChild(document.createTextNode(' — ' + e.title));
-    } else t.textContent = e.title;
-    if (e.count > 1) {
-      const n = document.createElement('span');
-      n.className = 'n';
-      n.textContent = '×' + e.count;
-      n.title = T('{n} file con lo stesso contenuto', {n: e.count});
-      t.appendChild(n);
-    }
-    const m = document.createElement('span');
-    m.className = 'm';
-    const bits = [g.year, g.publisher, g.country, kb(e.rep.size)].filter(Boolean);
-    m.textContent = bits.join(' · ');
-    const warns = g.warn.map((w) => T(w)).concat(e.rep.map.ok ? [] : [T('non supportata ({kb} KB)', {kb: e.rep.map.banks * 2})]);
-    if (warns.length) {
-      const w = document.createElement('span');
-      w.className = 'w';
-      w.textContent = ' \u26A0 ' + warns.join(', ');
-      m.appendChild(w);
-    }
-    if (g.flags.length) m.appendChild(document.createTextNode(' [' + g.flags.join('][') + ']'));
-    b.title = e.games.map((x) => x.name + (x.folder ? ' · ' + x.folder : '')).slice(0, 12).join('\n') + (e.games.length > 12 ? '\n…' : '') + '\n' + T('clic: avvio a freddo');
-    b.appendChild(t);
-    b.appendChild(m);
-    if (e.cat) b.appendChild(catalogLine(e));
-    if (e.conflict) {                                    // il nome del file diceva un altro gioco: vale il contenuto (impronta SHA-1)
-      const cf = document.createElement('span');
-      cf.className = 'cf';
-      cf.textContent = '\u26A0 ' + T('il nome del file dice {a}, ma il contenuto è {b}: vale il contenuto', {a: e.conflict.name, b: e.conflict.content});
-      b.appendChild(cf);
-    }
-    if (e.others.length) {
-      const a = document.createElement('span');
-      a.className = 'a';
-      a.textContent = T('anche:') + ' ' + e.others.slice(0, 4).join(' · ') + (e.others.length > 4 ? ' · …' : '');
-      a.title = e.others.join('\n');
-      b.appendChild(a);
-    }
-    if (pvOn) {
-      const cv = document.createElement('canvas');
-      cv.className = 'pv';
-      cv.width = 80; cv.height = 54;
-      cv.setAttribute('role', 'img');
-      cv.setAttribute('aria-label', T('Anteprima di {name}', {name: e.label}));
-      const res = app.previewFor(e);
-      drawPreview(cv, res);
-      cv.title = previewTitle(res);
-      let l = ui.pvCanvases.get(e.rep.sha);
-      if (!l) ui.pvCanvases.set(e.rep.sha, l = []);
-      l.push(cv);
-      li.appendChild(cv);
-    }
-    const cv = app.covers.count ? e.games.map((x) => app.covers.forGame(x)).find(Boolean) : null;
-    if (cv) {
-      const im = document.createElement('img');
-      im.className = 'th'; im.alt = ''; im.decoding = 'async'; im.draggable = false; im.dataset.cover = String(cv.id);
-      const u = thumbUrl(cv);
-      if (u) im.src = u;
-      li.appendChild(im);
-    }
-    li.appendChild(b);
-    const stId = app.entryStateId(e);
-    if (stId !== null) {
-      const info = app.stateInfo(stId);
-      const r = document.createElement('button');
-      r.type = 'button';
-      r.className = 's mem';
-      r.dataset.act = 'resume';
-      r.textContent = '●';
-      r.title = T('Riprendi la partita memorizzata') + (info.sameBios ? '' : ' (' + T('BIOS diverso: {name}', {name: info.biosName || T('non in elenco')}) + ')');
-      r.setAttribute('aria-label', T('Riprendi la partita memorizzata di {name}', {name: e.title}));
-      li.appendChild(r);
-    }
-    const x = document.createElement('button');
-    x.type = 'button';
-    x.className = 's';
-    x.dataset.act = 'remove';
-    x.textContent = '×';
-    x.title = e.count > 1 ? T('Togli dall’elenco tutti i {n} file di questa voce', {n: e.count}) : T('Togli dall’elenco');
-    x.setAttribute('aria-label', T('Togli {name} dall’elenco', {name: e.title}));
-    li.appendChild(x);
-    frag.appendChild(li);
+    frag.appendChild(buildRow(e, idx, 'all'));
   });
   ul.appendChild(frag);
+  // lista corta (tappa 8c): preferiti e giochi avviati di recente; con una ricerca in corso si nasconde, e «Tutti i giochi» si apre
+  const fl = $('favs'), sl = app.shortList(), searching = !!$('q').value;
+  ui.favRows = sl;
+  fl.textContent = '';
+  fl.setAttribute('aria-label', T('Recenti e preferiti'));
+  sl.forEach((e, idx) => fl.appendChild(buildRow(e, idx, 'fav')));
+  $('short').hidden = !sl.length || searching;
+  $('all-n').textContent = '(' + app.entryCount() + ')';
+  if (searching) $('allgames').open = true;
+  else if (app.sessionRev !== ui.sessRev) { ui.sessRev = app.sessionRev; if (sl.length) $('allgames').open = false; }      // sessione appena aperta con preferiti o recenti: si parte dalla lista corta
   setupObserver(ul);
   if (!ui.io) schedulePreviews();
   const total = app.lib.games.length, entries = app.entryCount();
@@ -1011,17 +1037,20 @@ $('bios-sel').addEventListener('change', (ev) => {
 });
 $('q').addEventListener('input', renderGames);
 $('folder').addEventListener('change', renderGames);
-$('games').addEventListener('click', (ev) => {
+function rowClick(ev) {
   const btn = ev.target.closest('button');
   const li = ev.target.closest('li');
   if (!btn || !li) return;
-  const e = ui.rows[Number(li.dataset.i)];
+  const e = (li.dataset.list === 'fav' ? ui.favRows : ui.rows)[Number(li.dataset.i)];
   if (!e) return;
   unlockAudio();
   if (btn.dataset.act === 'play') { if (app.startEntry(e)) focusScreen(); }
   else if (btn.dataset.act === 'resume') { if (app.resumeEntry(e)) focusScreen(); }
   else if (btn.dataset.act === 'remove') app.removeEntry(e);
-});
+  else if (btn.dataset.act === 'fav') app.toggleFavorite(e);
+}
+$('games').addEventListener('click', rowClick);
+$('favs').addEventListener('click', rowClick);
 $('b-merge').addEventListener('click', () => { app.setMerge(!app.mergeDuplicates); });
 $('b-previews').addEventListener('click', () => { app.setPreviews(!app.previews.enabled); });
 $('b-auto').addEventListener('click', () => { app.setAutoMachine(!app.autoMachine); });

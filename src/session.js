@@ -95,6 +95,11 @@ function checkSettings(s) {
     if (s.machine !== 'auto' && !KINDS.includes(s.machine)) throw new SessionError('impostazione non valida: macchina');
     o.machine = s.machine;
   }
+  for (const [k, max] of [['favorites', 500], ['recents', 50]]) {                // (tappa 8c) preferiti e giochi usati di recente: impronte SHA-256 delle cartucce; le sessioni di prima non li hanno
+    if (!(k in s)) continue;
+    if (!Array.isArray(s[k]) || s[k].length > max || !s[k].every((h) => typeof h === 'string' && HEX64.test(h))) throw new SessionError('impostazione non valida: ' + (k === 'favorites' ? 'preferiti' : 'giochi recenti'));
+    o[k] = Array.from(new Set(s[k]));
+  }
   if ('bindings' in s) {
     try { o.bindings = validateBindings(s.bindings); } catch (e) { throw new SessionError('impostazione non valida: ' + e.message); }
   }
