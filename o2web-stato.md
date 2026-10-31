@@ -698,4 +698,15 @@ Emulazione 3,3 ms per fotogramma (non e' la CPU il limite). Movimento fluido (50
 - *Flusso e valore aggiunto:* con Drive (tappa 10): recupero della sessione dal file in Drive, poi subito la scelta del gioco; ora: carico i file, poi scelgo il gioco. Per un file nuovo: aggiungere la ROM, salvare la sessione, ritrovarla su ogni dispositivo. Import e salvataggio della sessione devono essere FACILI DA IDENTIFICARE (proposta: nella barra in alto, non dentro un pannello). Il pulsante «Filtri CRT» resta in vista (l'utente lo usa per provare gli schermi).
 - *Giochi:* di solito 5-10, ma accesso a tutte le centinaia caricate: lista corta dei preferiti / usati di recente + elenco completo con ricerca. Vincolo: niente `localStorage`, quindi i preferiti vanno nella sessione.
 - *Fastidi:* nessuno particolare; desiderio generale di una situazione piu' ordinata.
-**Stato (31/10/2026): fase 0 fatta; fase 1 (verifica) in corso.**
+**Fase 1 - verifica (31/10/2026, misure con BIOS + le due raccolte TOSEC = 167 giochi; computer 1280 x 800, telefono orizzontale 915 x 412, verticale 412 x 915; screenshot solo in locale).**
+- *G1 (grave, regressione della 8b) - telefono orizzontale:* la barra in alto occupa 92 px su 412 (sottotitolo su due righe) e `#stage` ha ancora `height: calc(100vh - 24px)` (388 px): schermo + barra = 490 px > 412, lo schermo non entra e la placca dei comandi e' sotto la piega.
+- *G2 (grave) - cassetto in orizzontale:* a 915 px di larghezza vale la regola >= 900 px (il cassetto spinge la pagina) e lo schermo si riduce a 195 px di larghezza; sul telefono dovrebbe coprire.
+- *G3 (grave) - la lista dei giochi e' troppo in basso:* «Macchina e giochi» e' alta 1098 px (1133 in verticale); la lista parte a circa 470 px dentro il cassetto. Computer: restano visibili circa 3 righe (184 px); telefono orizzontale: nessuna riga senza scorrere (cassetto alto 320 px).
+- *M1 (media) - ordine dei campi:* «Cartella» ha l'etichetta sopra «Ordina per» e il menu delle cartelle sotto: etichetta e campo separati.
+- *M2 (media) - righe della lista:* 3-4 righe di testo e anteprima nera per gioco (circa 80 px): sul telefono poche voci per schermata; il pulsante «x» per togliere e' piccolo.
+- *M3 (media) - bersagli del tocco:* i pulsanti «?» e la «x» delle righe sono sotto i 44 px.
+- *M4 (media) - barra:* il sottotitolo (due righe a 915 px) costa spazio; «Sessione» (apri / salva) non e' in barra come voluto dall'utente.
+- *B1 (bassa) - accessibilita':* all'apertura il focus non passa nel cassetto e alla chiusura non torna a ☰ (solo con Esc); con il cassetto aperto sul computer manca un pulsante di chiusura; contrasti non misurati.
+- *B2 (bassa) - donazioni:* sezione fissa in fondo al cassetto, raggiungibile solo scorrendo.
+- *B3 (bassa) - testo di avvio:* «(in alto)» nel testo di avvio e negli aiuti e' corretto ma la zona di trascinamento nel pannello ha ancora un secondo «Aggiungi file…».
+**Stato (31/10/2026): fasi 0 e 1 fatte. Da decidere: correggere subito G1 e G2 (regressioni della 8b) o dentro la fase 4.**
