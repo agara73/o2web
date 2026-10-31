@@ -898,11 +898,12 @@ for (const id of ['tdir', 'tfire']) {
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) $(id).addEventListener(t, (ev) => { touch.pad.up(ev.pointerId); touchSync(); });
   $(id).addEventListener('contextmenu', (ev) => ev.preventDefault());       // la pressione lunga di Android non apre il menu
 }
+function landscapeLow() { return window.matchMedia('(orientation: landscape) and (max-height: 560px)').matches; }
 for (const id of ['tkb', 'b-vk']) $(id).addEventListener('click', () => {
   const c = $('vk');
   c.checked = !c.checked;
   c.dispatchEvent(new Event('change'));
-  if (c.checked && !document.fullscreenElement) {                      // in orizzontale la tastiera va sotto lo schermo: la si porta in vista
+  if (c.checked && !document.fullscreenElement && !landscapeLow()) {  // in verticale la tastiera va sotto lo schermo: la si porta in vista (in orizzontale basso sta sopra lo schermo)
     const r = $('vkeys').getBoundingClientRect();
     if (r.bottom > window.innerHeight) $('vkeys').scrollIntoView({block: 'nearest'});
   }

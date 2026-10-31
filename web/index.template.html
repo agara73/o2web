@@ -256,7 +256,10 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
   body.touch-on #stage { grid-area: stage; height: calc(100vh - var(--hh, 64px) - 24px); min-height: 160px; }
   .htitle p { display: none; }                                  /* la barra in alto deve costare poco: il telefono orizzontale e' basso */
   header { padding-top: 8px; padding-bottom: 6px; }
-  body.touch-on #play > #vkeys { grid-area: kb; }
+  body.touch-on #play > #vkeys { grid-area: stage; align-self: end; z-index: 3; margin: 0 4px 4px; padding: 4px; background: #000d; border-radius: 6px; }      /* la tastiera sta SOPRA la parte bassa dello schermo: croce, fuoco e «Tastiera» restano sempre in vista e non si scorre */
+  body.touch-on #play > #vkeys { gap: 2px; }
+  body.touch-on #play > #vkeys .vr { gap: 3px; }
+  body.touch-on #play > #vkeys button { padding: 6px 3px; min-width: 32px; font-size: .9rem; }
   #play:fullscreen { display: grid; }
   #play:fullscreen #stage { height: 100%; }
 }

@@ -273,9 +273,18 @@ with sync_playwright() as p:
     check("redraws:" in pg.inner_text("#stats"), "inglese: statistiche con «redraws» (%s)" % pg.inner_text("#stats"))
     pg.tap("#tkb")
     settle(pg)
-    vk = box(pg, "#vkeys")
-    check(vk["y"] >= -1 and vk["b"] <= 412 + 1, "orizzontale: «Keyboard» porta la tastiera in vista (%.0f-%.0f)" % (vk["y"], vk["b"]))
-    pg.tap("#tkb") if box(pg, "#tkb")["y"] >= 0 else pg.evaluate("() => document.getElementById('tkb').click()")
+    vk, st2 = box(pg, "#vkeys"), box(pg, "#stage")
+    check(vk["y"] >= -1 and vk["b"] <= 412 + 1 and vk["y"] >= st2["y"] - 1 and vk["b"] <= st2["b"] + 1, "orizzontale: «Keyboard» apre la tastiera sopra lo schermo, tutta in vista (%.0f-%.0f, schermo %.0f-%.0f)" % (vk["y"], vk["b"], st2["y"], st2["b"]))
+    vis = [box(pg, s) for s in ("#tkb", "#tdir", "#tfire")]
+    check(all(v["y"] >= -1 and v["b"] <= 412 + 1 and v["x"] >= -1 and v["r"] <= 915 + 1 for v in vis) and pg.evaluate("() => window.scrollY") == 0, "orizzontale: con la tastiera aperta restano in vista «Keyboard», croce e fuoco, e la pagina non scorre (%s, scorrimento %s)" % ([(round(v["y"]), round(v["b"])) for v in vis], pg.evaluate("() => window.scrollY")))
+    f2 = Fingers(ctx, pg)
+    t2 = box(pg, "#tdir")
+    f2.press(1, t2["x"] + t2["w"] / 2 + t2["w"] * 0.4, t2["y"] + t2["h"] / 2)
+    check(joy(pg) == [RIGHT, 0], "orizzontale: con la tastiera aperta la croce funziona ancora %s" % joy(pg))
+    f2.lift(1)
+    pg.tap("#tkb")
+    settle(pg)
+    check(pg.evaluate("() => !document.getElementById('vkeys').classList.contains('on')") and pg.get_attribute("#tkb", "aria-pressed") == "false", "orizzontale: un tocco vero su «Keyboard» chiude la tastiera")
     ctx.close()
 
     # ================================================================ computer (niente tocco): come prima
