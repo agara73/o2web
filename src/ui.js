@@ -898,7 +898,7 @@ for (const id of ['tdir', 'tfire']) {
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) $(id).addEventListener(t, (ev) => { touch.pad.up(ev.pointerId); touchSync(); });
   $(id).addEventListener('contextmenu', (ev) => ev.preventDefault());       // la pressione lunga di Android non apre il menu
 }
-$('tkb').addEventListener('click', () => {
+for (const id of ['tkb', 'b-vk']) $(id).addEventListener('click', () => {
   const c = $('vk');
   c.checked = !c.checked;
   c.dispatchEvent(new Event('change'));
@@ -1102,7 +1102,7 @@ for (const pl of [1, 2]) {
 }
 window.addEventListener('gamepadconnected', () => { ui.padKey = ''; });
 window.addEventListener('gamepaddisconnected', () => { ui.padKey = ''; });
-$('vk').addEventListener('change', (ev) => { buildVKeys(); $('vkeys').classList.toggle('on', ev.target.checked); $('tkb').setAttribute('aria-pressed', ev.target.checked ? 'true' : 'false'); });
+$('vk').addEventListener('change', (ev) => { buildVKeys(); $('vkeys').classList.toggle('on', ev.target.checked); for (const id of ['tkb', 'b-vk']) $(id).setAttribute('aria-pressed', ev.target.checked ? 'true' : 'false'); });
 $('stage').addEventListener('click', focusScreen);
 window.addEventListener('pointerdown', unlockAudio, true);
 window.addEventListener('keydown', unlockAudio, true);
