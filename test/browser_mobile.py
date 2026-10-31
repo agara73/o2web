@@ -122,6 +122,14 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     opened = pg.evaluate("() => ({open: document.querySelectorAll('#panel > details[open]').length, id: (document.querySelector('#panel > details[open]') || {}).id, left: document.getElementById('panel').getBoundingClientRect().left, w: document.getElementById('panel').getBoundingClientRect().width, iw: innerWidth, shade: !document.getElementById('shade').hidden, exp: document.getElementById('b-menu').getAttribute('aria-expanded')})")
     check(opened["open"] == 1 and opened["id"] == "d-machine" and opened["left"] == 0 and opened["w"] <= opened["iw"] * 0.9 and opened["shade"] and opened["exp"] == "true", "menu: si apre il cassetto con «Macchina e file» (prima apertura), ombra sul resto (%s)" % opened)
+    # elenco dei giochi sul telefono (8c): righe compatte e bersagli del tocco da 44 px
+    pg.set_input_files("#f-files", [os.path.join(D, "bios/o2rom.bin"), os.path.join(D, "killerbees.bin")])
+    pg.wait_for_function("() => document.querySelectorAll('#games li:not(.hd)').length >= 1", timeout=15000)
+    pg.tap("#d-games > summary")
+    pg.wait_for_timeout(300)
+    rw = pg.evaluate("""() => { const li = document.querySelector('#games li:not(.hd)'); const x = li.querySelector('button.s[data-act=remove]').getBoundingClientRect();
+      return {h: li.getBoundingClientRect().height, xw: x.width, xh: x.height, extra: [...li.querySelectorAll('.c, .a, .cf')].filter(e => getComputedStyle(e).display !== 'none').length, opts: document.getElementById('listopts').open}; }""")
+    check(rw["xw"] >= 44 and rw["xh"] >= 44 and rw["h"] <= 70 and rw["extra"] == 0 and not rw["opts"], "elenco sul telefono: riga compatta (%.0f px), × da 44 px, «Opzioni elenco» chiuso (%s)" % (rw["h"], rw))
     pg.tap("#d-look > summary")
     pg.wait_for_timeout(300)
     check(pg.evaluate("() => [...document.querySelectorAll('#panel > details[open]')].map(d => d.id).join()") == "d-look", "un solo pannello alla volta: aprendo «Aspetto» si chiude «Macchina e giochi»")

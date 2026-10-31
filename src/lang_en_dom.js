@@ -56,6 +56,7 @@ module.exports = {
   "Un clic su un gioco lo avvia a freddo; ● riprende la partita memorizzata; × lo toglie dall’elenco.": "One click on a game cold-starts it; ● resumes the stored game; × removes it from the list.",
   "titolo, anno, editore, paese…": "title, year, publisher, country…",
   "Cartella": "Folder",
+  "Opzioni elenco": "List options",
   "Svuota elenco": "Clear list",
   "Trascina qui i file, oppure usa «Aggiungi file…» in alto.": "Drag files here, or use “Add files…” at the top.",
   "Aggiungi file…": "Add files…",

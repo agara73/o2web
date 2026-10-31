@@ -657,6 +657,7 @@ with sync_playwright() as p:
     pg3.check("#muted")
     check(abs(ev(pg3, "() => window.o2web.app.settings.volume") - 0.3) < 1e-9 and ev(pg3, "() => window.o2web.sink.muted"), "volume e silenzio")
     # svuota elenco (due passi)
+    pg3.evaluate("() => { document.getElementById('d-games').open = true; document.getElementById('listopts').open = true; }")
     pg3.click("#b-clearlib")
     check("Sicuro" in pg3.inner_text("#b-clearlib") and ev(pg3, "() => window.o2web.app.lib.games.length") == 1, "Svuota: prima chiede conferma")
     pg3.click("#b-clearlib")
