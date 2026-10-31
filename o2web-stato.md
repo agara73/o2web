@@ -692,4 +692,10 @@ Emulazione 3,3 ms per fotogramma (non e' la CPU il limite). Movimento fluido (50
 **Sessioni.** A: fasi 0-1; B: fasi 2-3; C...: fase 4; poi fase 5. Posizione: prima della tappa 9 (consigliata, perche' la PWA si usa soprattutto dal telefono); l'ordine lo decide l'utente.
 **Vincoli invariati.** Pagina unica, niente `localStorage`, dialoghi inline, testi anche in inglese (`lang_en_dom.js`), cassetto a un pannello alla volta salvo ripensamenti nella fase 2.
 **Aperti.** Divisione proposta (non ancora decisa): «Giochi» (ricerca, cartella, ordinamento, copertina, lista, pulsanti) per prima; «Macchina e file» (macchina, cambio automatico, avanzate, zona file, chip, set di caratteri) piu' in basso. Che voce si apre alla prima apertura: da decidere.
-**Stato (31/10/2026): piano scritto, fase 0 da iniziare.**
+**Fase 0 - risposte dell'utente (31/10/2026).**
+- *Dispositivi:* computer e telefono; il telefono preferibilmente in ORIZZONTALE (schermo piu' ampio): il disegno parte da quel formato.
+- *Importanza delle voci:* 1) Giochi (voce a se'), Tasti, Aspetto; 2) Macchina e file, Stato e sessione; 3) Rete e copertine, Caratteri, Informazioni. Le Donazioni (lista dei desideri Amazon) devono restare visibili, non ultima voce in fondo al cassetto.
+- *Flusso e valore aggiunto:* con Drive (tappa 10): recupero della sessione dal file in Drive, poi subito la scelta del gioco; ora: carico i file, poi scelgo il gioco. Per un file nuovo: aggiungere la ROM, salvare la sessione, ritrovarla su ogni dispositivo. Import e salvataggio della sessione devono essere FACILI DA IDENTIFICARE (proposta: nella barra in alto, non dentro un pannello). Il pulsante «Filtri CRT» resta in vista (l'utente lo usa per provare gli schermi).
+- *Giochi:* di solito 5-10, ma accesso a tutte le centinaia caricate: lista corta dei preferiti / usati di recente + elenco completo con ricerca. Vincolo: niente `localStorage`, quindi i preferiti vanno nella sessione.
+- *Fastidi:* nessuno particolare; desiderio generale di una situazione piu' ordinata.
+**Stato (31/10/2026): fase 0 fatta; fase 1 (verifica) in corso.**
