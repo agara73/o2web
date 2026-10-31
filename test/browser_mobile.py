@@ -253,6 +253,19 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     st1 = box(pg, "#stage")
     check(abs(st1["w"] - st0["w"]) < 2 and pg.evaluate("() => !document.getElementById('shade').hidden && getComputedStyle(document.getElementById('shade')).display !== 'none'"), "orizzontale: il cassetto COPRE lo schermo (con l'ombra), non lo restringe (%.0f -> %.0f px)" % (st0["w"], st1["w"]))
+    # cassetto a due colonne (8c): voci a sinistra, voce aperta a destra a tutta altezza, donazioni in vista, tutto dentro il display
+    g = pg.evaluate("""() => { const r = (e) => { const b = e.getBoundingClientRect(); return {x: b.left, r: b.right, y: b.top, b: b.bottom}; };
+      const d = document.querySelector('#panel > details[open]'), body = d.querySelector(':scope > .pb');
+      return {panel: r(document.getElementById('panel')), sums: [...document.querySelectorAll('#panel > details > summary')].map(r), body: r(body), hh: document.querySelector('header').getBoundingClientRect().bottom,
+              don: r(document.getElementById('d-don')), close: r(document.getElementById('b-close')), id: d.id}; }""")
+    check(g["panel"]["r"] - g["panel"]["x"] >= 600 and g["panel"]["r"] <= 915 + 1, "orizzontale: cassetto largo circa 640 px (%.0f)" % (g["panel"]["r"] - g["panel"]["x"]))
+    check(all(s_["r"] <= 175 for s_ in g["sums"]), "orizzontale: le voci stanno tutte nella colonna di sinistra")
+    check(g["body"]["x"] >= 170 and g["body"]["r"] <= 915 + 1 and g["body"]["r"] - g["body"]["x"] >= 400 and g["body"]["b"] >= 412 - 1 and g["body"]["y"] <= g["hh"] + 2, "orizzontale: la voce aperta occupa la colonna di destra a tutta altezza (%s)" % g["body"])
+    check(g["don"]["b"] <= 412 + 1 and g["don"]["y"] >= g["hh"] and g["don"]["r"] <= 190, "orizzontale: «Donazioni» sempre in vista in fondo alla colonna di sinistra (%s)" % g["don"])
+    pg.tap("#d-games > summary")
+    pg.wait_for_timeout(300)
+    lst = pg.evaluate("() => { const b = document.getElementById('q').getBoundingClientRect(); return {y: b.top, b: b.bottom, x: b.left}; }")
+    check(lst["x"] >= 170 and lst["b"] <= 412, "orizzontale: in «Giochi» la ricerca si vede senza scorrere (%s)" % lst)
     pg.tap("#b-menu")
     pg.wait_for_timeout(300)
     check(pg.inner_text("#tfire") == "Fire" and pg.inner_text("#tkb") == "Keyboard", "inglese: «Fire» e «Keyboard» (%r, %r)" % (pg.inner_text("#tfire"), pg.inner_text("#tkb")))

@@ -274,6 +274,15 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
   body.touch-on #play > #vkeys { gap: 2px; }
   body.touch-on #play > #vkeys .vr { gap: 3px; }
   body.touch-on #play > #vkeys button { padding: 6px 3px; min-width: 32px; font-size: .9rem; }
+  /* cassetto a due colonne (tappa 8c): le voci a sinistra, la voce aperta a destra a tutta altezza */
+  #panel { width: min(96vw, 640px); }
+  #panel > details, #panel > .dhead, #panel > #d-don { width: 158px; }
+  #panel > details > summary { padding: 7px 0; font-size: .88rem; }
+  #panel > details[open] { background: #26304a; border-color: var(--acc); padding-bottom: 0; }
+  #panel > details[open] > .pb { position: fixed; top: var(--hh, 59px); bottom: 0; left: 182px; right: 0; width: auto; overflow-y: auto; margin: 0; padding: 4px 12px 12px; background: var(--bg); z-index: 1; }
+  #panel > .dhead { margin: 0; }
+  #panel > #d-don { position: sticky; bottom: -12px; margin: 0 0 -12px -12px; width: 170px; padding: 6px 12px; flex-direction: column; align-items: flex-start; gap: 4px; }
+  #panel > #d-don a.don-link { padding: 4px 8px; font-size: .8rem; }
   #play:fullscreen { display: grid; }
   #play:fullscreen #stage { height: 100%; }
 }
@@ -391,6 +400,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
     <div class="dhead"><button type="button" id="b-close" aria-label="Chiudi i pannelli" title="Chiudi i pannelli (Esc)">&#10005;</button></div>
     <details id="d-games">
       <summary>Giochi</summary>
+      <div class="pb">
       <div class="fh"><label class="f" for="q">Cerca nell&rsquo;elenco dei giochi</label>
         <button type="button" class="help" aria-expanded="false" aria-controls="h-games" aria-label="Aiuto: giochi" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-games" hidden>
@@ -408,9 +418,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       <figure class="cover" id="cover" style="display:none"><img id="cover-img" alt=""><figcaption id="cover-cap"></figcaption></figure>
       <ul id="games" data-dyn></ul>
       <div class="row"><button id="b-clearlib" disabled>Svuota elenco</button><button type="button" id="b-merge" aria-pressed="true" title="Mostra una voce sola per i file con lo stesso contenuto">Unisci giochi duplicati</button><button type="button" id="b-previews" aria-pressed="true" title="Piccola anteprima di una schermata di gioco">Anteprime</button><span class="dim" id="clear-note"></span></div>
+      </div>
     </details>
     <details id="d-keys">
       <summary>Tasti, joystick e gamepad</summary>
+      <div class="pb">
       <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-keys" aria-label="Aiuto: tasti, joystick e gamepad" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-keys" hidden>
         <p>Tastiera della console: cifre, lettere, <kbd>Spazio</kbd>, <kbd>Invio</kbd> (ENT), <kbd>Esc</kbd> o <kbd>Canc</kbd> (CLR), <kbd>+ - * / = . ? :</kbd>.
@@ -433,9 +445,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       <label class="f" for="tstick">Joystick a tocco</label>
       <select id="tstick"><option value="cross">Croce fissa</option><option value="float">Segue il dito</option></select>
       <div class="dim" style="margin-top:4px">Il joystick a tocco muove il joystick 1 (con &laquo;Scambia comandi 1-2&raquo; il 2). Queste due scelte non si ricordano alla prossima apertura.</div>
+      </div>
     </details>
     <details id="d-look">
       <summary>Aspetto (filtri da tubo catodico)</summary>
+      <div class="pb">
       <label class="f" for="look-preset">Filtri da tubo catodico</label>
       <select id="look-preset">
         <option value="esatto">Nessun filtro (immagine esatta)</option>
@@ -452,9 +466,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       <label class="f" for="look-detail">Dettaglio (righe, maschera e curvatura)</label>
       <select id="look-detail"><option value="3">3 &times; 3 pixel per punto</option><option value="4">4 &times; 4 pixel per punto (pi&ugrave; pesante)</option></select>
       <div class="dim" id="look-info" data-dyn style="margin-top:6px"></div>
+      </div>
     </details>
     <details id="d-machine">
       <summary>Macchina e file</summary>
+      <div class="pb">
       <div class="mrow">
         <figure class="machine" id="machine" style="display:none"><div id="machine-img"></div></figure>
         <div class="mcol">
@@ -535,9 +551,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
         <progress id="dl-prog" max="100" hidden aria-label="Avanzamento dello scarico"></progress>
       </div>
       </details>
+      </div>
     </details>
     <details id="d-state">
       <summary>Stato e sessione</summary>
+      <div class="pb">
       <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-state" aria-label="Aiuto: stato e sessione" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-state" hidden>
         <p>Lo stato di una partita contiene solo lo stato della macchina e le impronte dei file, mai i file. Per riaprire uno stato (.o2state) o una sessione usa &laquo;Aggiungi file&hellip;&raquo; in alto o trascinali sulla pagina.</p>
@@ -545,9 +563,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       </div>
       <div class="row"><button id="b-save" disabled>Salva stato</button></div>
       <div class="dim" style="margin-top:6px">La sessione (apri / salva) si trova nella barra in alto, accanto a &laquo;Aggiungi file&hellip;&raquo;.</div>
+      </div>
     </details>
     <details id="d-net">
       <summary>Rete e copertine</summary>
+      <div class="pb">
       <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-net" aria-label="Aiuto: rete" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-net" hidden>
         <p>All&rsquo;apertura la pagina legge solo i set di caratteri da GitHub (salvo con <code>?offline</code>); per il resto non contatta nessun indirizzo da sola: solo se premi &laquo;Scarica&raquo; legge (in sola lettura, solo https) il file dall&rsquo;indirizzo che scrivi qui: nessun tuo file o dato viene inviato. Il file scaricato si tratta come se l&rsquo;avessi scelto dal disco.</p>
@@ -568,9 +588,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       </div>
       <div class="row"><button type="button" id="b-covers-clear" disabled>Svuota copertine</button></div>
       <div class="dim" id="covers-info" data-dyn style="margin-top:6px"></div>
+      </div>
     </details>
     <details id="d-chars">
       <summary>Editor dei caratteri (set GPL e personalizzati)</summary>
+      <div class="pb">
       <div class="hl"><button type="button" class="help" aria-expanded="false" aria-controls="h-chars" aria-label="Aiuto: editor dei caratteri" title="Aiuto">?</button></div>
       <div class="helpbox" id="h-chars" hidden>
         <p>La pagina contiene un set di caratteri <b>GPL disegnato da zero</b>, cos&igrave; si pu&ograve; giocare anche senza l&rsquo;originale. Qui lo puoi ritoccare: la modifica si vede subito nel gioco in corso (senza riavviare), si salva come file .bin e si pu&ograve; riaprire. Puoi anche aprire il set originale e correggerlo carattere per carattere.</p>
@@ -623,9 +645,11 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
         </ol>
         <p>Il set GPL incluso &egrave; leggibile ma <b>non identico</b> all&rsquo;originale: i giochi che usano i simboli speciali (celle 48-63 del chip video) li mostrano in altro modo, e alcuni diventano difficili da giocare. Se conosci i disegni giusti, correggili qui e salva il .bin: un set tuo e disegnato da te si pu&ograve; condividere con la stessa licenza del progetto (GPL-3.0); un set copiato dall&rsquo;originale no.</p>
       </details>
+      </div>
     </details>
     <details id="d-about" class="about">
       <summary>Informazioni e licenza</summary>
+      <div class="pb">
       <p><b>O2web</b> &mdash; emulatore Odyssey&sup2; / Videopac per browser. &copy; 2026 by Agara73.</p>
       <p>Questo programma &egrave; software libero: puoi ridistribuirlo e/o modificarlo secondo i termini della GNU General Public License, versione 3, pubblicata dalla Free Software Foundation.
         &Egrave; distribuito nella speranza che sia utile, ma <b>senza alcuna garanzia</b>, nemmeno quella implicita di commerciabilit&agrave; o di idoneit&agrave; a uno scopo particolare. Vedi la licenza per i dettagli.</p>
@@ -641,6 +665,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
         <summary>Testo completo della licenza (GPL-3.0, in inglese)</summary>
         <pre class="gpl" id="gpl-text" tabindex="0">/*__LICENSE__*/</pre>
       </details>
+      </div>
     </details>
     <section id="d-don" class="static" aria-labelledby="don-h">
       <h2 id="don-h">Donazioni</h2>
