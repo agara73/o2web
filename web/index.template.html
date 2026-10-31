@@ -26,7 +26,7 @@ header { position: sticky; top: 0; z-index: 20; max-width: none; background: var
 body.menu-open #panel { transform: none; }
 #shade { position: fixed; inset: var(--hh, 64px) 0 0 0; z-index: 30; background: #0009; }
 #shade[hidden] { display: none; }
-@media (min-width: 900px) { #shade { display: none; } body.menu-open main, body.menu-open footer { padding-left: 416px; } }      /* sul computer il cassetto spinge la pagina, non la copre */
+@media (min-width: 900px) and (min-height: 600px) { #shade { display: none; } body.menu-open main, body.menu-open footer { padding-left: 416px; } }      /* sul computer (e su un tablet) il cassetto spinge la pagina; su un telefono, anche in orizzontale, la copre */
 @media (prefers-reduced-motion: reduce) { #panel { transition: none; } }
 #langs { display: flex; gap: 8px; flex: none; padding-top: 2px; }
 #langs button { padding: 3px; min-height: 0; line-height: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; opacity: .6; }
@@ -253,7 +253,9 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
   body.touch-on #tdir { grid-area: dir; }
   body.touch-on #tdir.float { width: 30vw; max-width: none; height: 70vh; }
   body.touch-on #tright { grid-area: right; }
-  body.touch-on #stage { grid-area: stage; height: calc(100vh - 24px); min-height: 160px; }
+  body.touch-on #stage { grid-area: stage; height: calc(100vh - var(--hh, 64px) - 24px); min-height: 160px; }
+  .htitle p { display: none; }                                  /* la barra in alto deve costare poco: il telefono orizzontale e' basso */
+  header { padding-top: 8px; padding-bottom: 6px; }
   body.touch-on #play > #vkeys { grid-area: kb; }
   #play:fullscreen { display: grid; }
   #play:fullscreen #stage { height: 100%; }

@@ -709,4 +709,5 @@ Emulazione 3,3 ms per fotogramma (non e' la CPU il limite). Movimento fluido (50
 - *B1 (bassa) - accessibilita':* all'apertura il focus non passa nel cassetto e alla chiusura non torna a ☰ (solo con Esc); con il cassetto aperto sul computer manca un pulsante di chiusura; contrasti non misurati.
 - *B2 (bassa) - donazioni:* sezione fissa in fondo al cassetto, raggiungibile solo scorrendo.
 - *B3 (bassa) - testo di avvio:* «(in alto)» nel testo di avvio e negli aiuti e' corretto ma la zona di trascinamento nel pannello ha ancora un secondo «Aggiungi file…».
-**Stato (31/10/2026): fasi 0 e 1 fatte. Da decidere: correggere subito G1 e G2 (regressioni della 8b) o dentro la fase 4.**
+**Correzione G1 e G2 (31/10/2026, su richiesta dell'utente).** Barra in alto con `--hh` aggiornata da `syncHeader()` (ResizeObserver); in orizzontale basso la barra scende a 59 px (sottotitolo nascosto) e `#stage` e' `calc(100vh - var(--hh) - 24px)`; il cassetto spinge la pagina solo con `min-width: 900px` e `min-height: 600px`, altrimenti copre con l'ombra. Prove in `browser_mobile.py`; soglia dell'immagine in orizzontale abbassata (433 x 325: la vecchia misura derivava dal difetto). Batteria completa verde.
+**Stato (31/10/2026): fasi 0 e 1 fatte, G1 e G2 corretti; restano da fare le fasi 2-5 (G3 e il resto).**

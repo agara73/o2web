@@ -934,8 +934,11 @@ window.addEventListener('drop', (e) => { if (e.dataTransfer && e.dataTransfer.fi
 // ---- cassetto dei pannelli: si apre con il pulsante del menu, un solo pannello aperto alla volta
 const drawer = $('panel');
 const panels = Array.from(drawer.querySelectorAll(':scope > details'));
+function syncHeader() { document.documentElement.style.setProperty('--hh', document.querySelector('header').offsetHeight + 'px'); }      // il cassetto e lo schermo partono sotto la barra
+syncHeader();
+if (window.ResizeObserver) new ResizeObserver(syncHeader).observe(document.querySelector('header'));
 function setDrawer(on) {
-  document.documentElement.style.setProperty('--hh', document.querySelector('header').offsetHeight + 'px');
+  syncHeader();
   document.body.classList.toggle('menu-open', on);
   drawer.inert = !on;
   $('shade').hidden = !on;
