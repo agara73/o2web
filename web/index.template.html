@@ -15,7 +15,19 @@ html, body { margin: 0; background: var(--bg); color: var(--txt); font: 15px/1.4
 body { min-height: 100vh; display: flex; flex-direction: column; }
 header, main, footer { width: 100%; max-width: 1320px; margin: 0 auto; padding: 0 16px; }
 header { padding-top: 14px; padding-bottom: 4px; }
-.hrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+header { position: sticky; top: 0; z-index: 20; max-width: none; background: var(--bg); border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.hrow { display: flex; align-items: center; gap: 12px; max-width: 1320px; margin: 0 auto; }
+.htitle { flex: 1; min-width: 0; }
+#b-menu { flex: none; width: 44px; min-height: 44px; padding: 0; font-size: 1.4rem; line-height: 1; }
+#b-add { flex: none; min-height: 44px; font-weight: 600; border-color: var(--acc); }
+@media (max-width: 520px) { .htitle p { display: none; } #b-add { padding: 6px 10px; } }
+#panel { position: fixed; top: var(--hh, 64px); bottom: 0; left: 0; width: min(88vw, 400px); z-index: 40; overflow-y: auto; padding: 12px; background: var(--bg); border-right: 1px solid var(--line);
+  transform: translateX(-102%); transition: transform .2s; }
+body.menu-open #panel { transform: none; }
+#shade { position: fixed; inset: var(--hh, 64px) 0 0 0; z-index: 30; background: #0009; }
+#shade[hidden] { display: none; }
+@media (min-width: 900px) { #shade { display: none; } body.menu-open main, body.menu-open footer { padding-left: 416px; } }      /* sul computer il cassetto spinge la pagina, non la copre */
+@media (prefers-reduced-motion: reduce) { #panel { transition: none; } }
 #langs { display: flex; gap: 8px; flex: none; padding-top: 2px; }
 #langs button { padding: 3px; min-height: 0; line-height: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; opacity: .6; }
 #langs button svg { display: block; border-radius: 3px; box-shadow: 0 0 0 1px #0006; }
@@ -23,8 +35,7 @@ header { padding-top: 14px; padding-bottom: 4px; }
 #langs button[aria-pressed="true"] { opacity: 1; border-color: var(--acc); }
 h1 { font-size: 1.3rem; margin: 0 0 2px; }
 header p { margin: 0; color: var(--dim); font-size: .88rem; }
-main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding-top: 10px; padding-bottom: 12px; flex: 1; }
-@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } }
+main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 10px; padding-bottom: 12px; flex: 1; }
 #stage { background: #000; border: 1px solid var(--line); border-radius: 6px; position: relative; width: 100%; height: clamp(260px, calc(100vh - 300px), 880px);
   display: flex; overflow: auto; }
 #stage:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; overflow: hidden; }
@@ -67,7 +78,7 @@ pre.gpl { max-height: 320px; overflow: auto; white-space: pre-wrap; font: .72rem
 #toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: rgba(20, 22, 28, .88); border: 1px solid var(--line); border-radius: 5px;
   padding: 4px 12px; font-size: .9rem; pointer-events: none; opacity: 0; transition: opacity .25s; }
 #toast.on { opacity: 1; }
-#panel { align-self: start; display: flex; flex-direction: column; gap: 8px; }
+#panel { display: flex; flex-direction: column; gap: 8px; }
 details { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 0 12px; }
 details[open] { padding-bottom: 12px; }
 section.static { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 0 12px 12px; }
@@ -251,10 +262,12 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
 <body>
 <header>
   <div class="hrow">
-    <div>
+    <button type="button" id="b-menu" aria-expanded="false" aria-controls="panel" aria-label="Menu dei pannelli" title="Pannelli: macchina e giochi, stato, rete, aspetto, tasti, caratteri, informazioni">&#9776;</button>
+    <div class="htitle">
       <h1>O2web</h1>
       <p>Emulatore di Magnavox Odyssey&sup2; e Philips Videopac G7000 / G7200 / G7400 &mdash; gira nel browser, anche da disco e senza connessione.</p>
     </div>
+    <input type="file" id="f-files" multiple hidden><button type="button" id="b-add" title="BIOS, set di caratteri, cartucce (.bin), archivi .zip, stati e sessioni: restano nel tuo browser">Aggiungi file&hellip;</button>
     <nav id="langs" data-dyn aria-label="Language / Lingua">
       <button type="button" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="true"><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false"><rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="13"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg></button>
       <button type="button" data-lang="it" lang="it" title="Italiano" aria-label="Italiano" aria-pressed="false"><svg viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false"><rect width="20" height="40" fill="#009246"/><rect x="20" width="20" height="40" fill="#fff"/><rect x="40" width="20" height="40" fill="#ce2b37"/></svg></button>
@@ -275,7 +288,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
           <path d="M40 84h40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
         </svg>
         <div class="logo">O2web</div>
-        <div class="sub">Aggiungi il BIOS e i giochi con &laquo;Aggiungi file&hellip;&raquo; (pannello &laquo;Macchina e giochi&raquo;): restano nel tuo browser.</div>
+        <div class="sub">Aggiungi il BIOS e i giochi con &laquo;Aggiungi file&hellip;&raquo; (in alto): restano nel tuo browser.</div>
         <ul class="needs" id="splash-needs">
           <li id="s-bios" data-dyn-attr><span class="badge" data-dyn></span><b>BIOS</b><span data-dyn></span></li>
           <li id="s-char" data-dyn-attr><span class="badge" data-dyn></span><b>Set di caratteri</b><span data-dyn></span></li>
@@ -344,8 +357,8 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
     <div id="log" role="status" aria-live="polite"></div>
     <div id="vkeys" aria-label="Tastiera a schermo"></div>
   </section>
-  <aside id="panel">
-    <details open id="d-games">
+  <aside id="panel" aria-label="Pannelli" inert>
+    <details id="d-games">
       <summary>Macchina e giochi</summary>
       <div class="mrow">
         <figure class="machine" id="machine" style="display:none"><div id="machine-img"></div></figure>
@@ -359,7 +372,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       </div>
       <div class="dim" id="machine-cap" style="display:none"></div>
       <div class="helpbox" id="h-machine" hidden>
-        <p>Serve un BIOS Odyssey&sup2; / Videopac G7000 da 1024 byte (anche dentro un archivio .zip); per C52, Jopac e G7400 il loro BIOS. Aggiungilo con &laquo;Aggiungi file&hellip;&raquo; qui sotto o trascinalo sulla pagina: resta nel browser e non viene mai inviato in rete. Se ne aggiungi pi&ugrave; d&rsquo;uno per la stessa macchina, scegli quale usare in &laquo;Avanzate&raquo;.</p>
+        <p>Serve un BIOS Odyssey&sup2; / Videopac G7000 da 1024 byte (anche dentro un archivio .zip); per C52, Jopac e G7400 il loro BIOS. Aggiungilo con &laquo;Aggiungi file&hellip;&raquo; in alto o trascinalo sulla pagina: resta nel browser e non viene mai inviato in rete. Se ne aggiungi pi&ugrave; d&rsquo;uno per la stessa macchina, scegli quale usare in &laquo;Avanzate&raquo;.</p>
         <p>La macchina sceglie da sola BIOS, standard video e schermo: Odyssey&sup2; = BIOS G7000 con NTSC; Videopac G7000 = lo stesso BIOS con PAL; Videopac G7200 = come il G7000, con lo schermo in bianco e nero (cambiano solo i colori mostrati, non l&rsquo;emulazione; i livelli di grigio sono la luminanza standard, da verificare sulla macchina vera); C52, Jopac e G7400 = il loro BIOS.</p>
         <p>Le macchine di cui manca il BIOS sono in grigio: aggiungilo con &laquo;Aggiungi file&hellip;&raquo;. Se cambiano BIOS o standard, il gioco in uso riparte a freddo e la partita si memorizza; tra G7000 e G7200 non riparte niente.</p>
         <p>La foto ha una licenza libera (crediti in &laquo;Informazioni e licenza&raquo;); dove non c&rsquo;&egrave; una foto, il disegno &egrave; stilizzato e originale.</p>
@@ -390,7 +403,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
       <ul id="games" data-dyn></ul>
       <div class="row"><button id="b-clearlib" disabled>Svuota elenco</button><button type="button" id="b-merge" aria-pressed="true" title="Mostra una voce sola per i file con lo stesso contenuto">Unisci giochi duplicati</button><button type="button" id="b-previews" aria-pressed="true" title="Piccola anteprima di una schermata di gioco">Anteprime</button><span class="dim" id="clear-note"></span></div>
       <div class="drop" id="drop">Trascina qui i file, oppure
-        <input type="file" id="f-files" multiple hidden><button type="button" id="b-add">Aggiungi file&hellip;</button><button type="button" class="help" aria-expanded="false" aria-controls="h-drop" aria-label="Aiuto: che file si possono aggiungere" title="Aiuto">?</button>
+        <button type="button" id="b-add2">Aggiungi file&hellip;</button><button type="button" class="help" aria-expanded="false" aria-controls="h-drop" aria-label="Aiuto: che file si possono aggiungere" title="Aiuto">?</button>
         <div class="helpbox" id="h-drop" hidden>
           <p>BIOS, set di caratteri e cartucce (.bin), archivi compressi (.zip, anche con altri .zip dentro), stati (.o2state) e sessioni.</p>
           <p>&Egrave; l&rsquo;unico punto di caricamento: riconosce da solo il tipo di ogni file (anche immagini delle copertine e sorgenti C dei set di caratteri). Porta solo file che hai il diritto di usare: restano nel tuo browser.</p>
@@ -601,6 +614,7 @@ body.touch-on #play > #vkeys button { min-width: 30px; padding: 8px 3px; }
     </section>
     <div id="info"></div>
   </aside>
+  <div id="shade" hidden></div>
 </main>
 <footer>
   O2web &middot; &copy; 2026 by Agara73 &middot; software libero, GPL-3.0 (solo il codice; vedi &laquo;Informazioni e licenza&raquo;). I giochi, il BIOS e il set di caratteri restano dei rispettivi titolari;

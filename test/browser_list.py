@@ -50,6 +50,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.on("request", lambda r: requests.append(r.url))
     pg.goto("file://" + os.path.abspath(a.html) + "?offline&lang=en")
+    pg.evaluate("() => { document.getElementById('d-games').open = true; }")
     check(pg.evaluate("() => document.getElementById('b-clearlib').nextElementSibling.id") == "b-merge", "«Unisci giochi duplicati» e' accanto a «Svuota elenco»")
     check(pg.inner_text("#b-merge") == "Merge duplicate games" and pg.inner_text("#b-clearlib") == "Clear list" and pg.inner_text("#b-previews") == "Previews", "etichette in inglese")
     check(pg.get_attribute("#b-merge", "aria-pressed") == "true" and pg.get_attribute("#b-previews", "aria-pressed") == "true", "all'apertura: fusione e anteprime accese")
@@ -137,6 +138,7 @@ with sync_playwright() as p:
     pg.fill("#q", "")
     # italiano
     pg.goto("file://" + os.path.abspath(a.html) + "?offline&lang=it")
+    pg.evaluate("() => { document.getElementById('d-games').open = true; }")
     check(pg.inner_text("#b-merge") == "Unisci giochi duplicati" and pg.inner_text("#b-previews") == "Anteprime" and pg.inner_text("#b-clearlib") == "Svuota elenco", "etichette in italiano")
     # senza anteprime ne' errori: la pagina con BIOS ma senza giochi non fa richieste
     check(not errors, "nessun errore in console: %s" % errors[:3])

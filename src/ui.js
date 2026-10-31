@@ -785,7 +785,7 @@ document.addEventListener('click', (ev) => {
 });
 document.addEventListener('keydown', (ev) => {
   const b = ev.key === 'Escape' && ev.target && ev.target.closest ? ev.target.closest('button.help') : null;
-  if (b && b.getAttribute('aria-expanded') === 'true') toggleHelp(b, false);
+  if (b && b.getAttribute('aria-expanded') === 'true') { toggleHelp(b, false); ev.preventDefault(); }
 });
 
 function endCapture() { ui.capture = null; renderKeys(); }
@@ -924,12 +924,36 @@ async function handleFiles(files) {
   app.changed();
 }
 
-$('b-add').addEventListener('click', () => { $('f-files').value = ''; $('f-files').click(); });
+for (const id of ['b-add', 'b-add2']) $(id).addEventListener('click', () => { $('f-files').value = ''; $('f-files').click(); });
 $('f-files').addEventListener('change', (ev) => { handleFiles(Array.from(ev.target.files || [])); });
 const drop = $('drop');
 for (const n of ['dragenter', 'dragover']) window.addEventListener(n, (e) => { e.preventDefault(); drop.classList.add('over'); });
 for (const n of ['dragleave', 'drop']) window.addEventListener(n, (e) => { e.preventDefault(); if (n === 'drop' || e.target === document.documentElement) drop.classList.remove('over'); });
-window.addEventListener('drop', (e) => { if (e.dataTransfer && e.dataTransfer.files) { $('d-games').open = true; handleFiles(Array.from(e.dataTransfer.files)); } });
+window.addEventListener('drop', (e) => { if (e.dataTransfer && e.dataTransfer.files) { handleFiles(Array.from(e.dataTransfer.files)); } });
+
+// ---- cassetto dei pannelli: si apre con il pulsante del menu, un solo pannello aperto alla volta
+const drawer = $('panel');
+const panels = Array.from(drawer.querySelectorAll(':scope > details'));
+function setDrawer(on) {
+  document.documentElement.style.setProperty('--hh', document.querySelector('header').offsetHeight + 'px');
+  document.body.classList.toggle('menu-open', on);
+  drawer.inert = !on;
+  $('shade').hidden = !on;
+  $('b-menu').setAttribute('aria-expanded', on ? 'true' : 'false');
+}
+for (const d of panels) d.addEventListener('toggle', () => {
+  if (!d.open) return;
+  for (const o of panels) if (o !== d) o.open = false;
+  setDrawer(true);
+});
+$('b-menu').addEventListener('click', () => {
+  if (document.body.classList.contains('menu-open')) { setDrawer(false); return; }
+  if (panels.some((d) => d.open)) setDrawer(true); else $('d-games').open = true;
+});
+$('shade').addEventListener('click', () => setDrawer(false));
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !e.defaultPrevented && !ui.capture && document.body.classList.contains('menu-open')) { setDrawer(false); $('b-menu').focus(); }
+});
 
 $('b-covers-clear').addEventListener('click', () => {
   const b = $('b-covers-clear');

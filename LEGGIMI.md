@@ -150,6 +150,8 @@ Moduli: `src/sha1.js`, `src/gamedb_data.js` (generato, 187 voci), `src/gamenames
 La tabella incorporata contiene titoli di giochi (lista CC0 di MAME): non e' grafica ne' dati delle ROM, ma e' da tenere presente per la regola sui titoli. Le anteprime stanno solo in memoria.
 
 ## Tappa 8: web mobile (solo sviluppatori)
+
+Tappa 8b (interfaccia): barra in alto con menu e «Aggiungi file…», pannelli in un cassetto (`#panel`, un solo `<details>` aperto alla volta: la logica e' in `src/ui.js`, sezione «cassetto dei pannelli»); le prove della pagina aprono i pannelli da sole (`auto_panel` e `panel` in `test/browser_check.py`) e `test/browser_mobile.py` prova il cassetto sul telefono simulato.
 ```sh
 sh test/run_all.sh CARTELLA_DEI_DUMP                        # tutto; i passi 9r (tocco) e 9s (passo) sono quelli della tappa 8, il 10 include browser_mobile.py
 python3 -I test/touch_vectors.py /tmp/t.json && node test/test_touch.js /tmp/t.json   # joystick a tocco contro hw/touch_ref.py

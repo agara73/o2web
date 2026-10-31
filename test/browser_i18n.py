@@ -70,6 +70,7 @@ def new_page(ctx, query):
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.on("request", lambda r: requests.append(r.url))
     pg.goto(URL + query)
+    pg.evaluate("() => { document.getElementById('d-games').open = true; }")     # il pannello sta nel cassetto
     return pg
 
 

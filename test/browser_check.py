@@ -55,12 +55,30 @@ def build_tosec(src_dir, out):
                 z.write(p, os.path.relpath(p, os.path.dirname(src_dir)))
 
 
+def auto_panel(pg):
+    """I pannelli stanno nel cassetto, uno solo aperto alla volta: prima di un clic o di un campo da riempire apre i pannelli che lo contengono (come farebbe l'utente)."""
+    def wrap(name):
+        orig = getattr(pg, name)
+        def f(sel, *args, **kw):
+            if isinstance(sel, str) and "#" in sel and "summary" not in sel:
+                opened = pg.evaluate("""(sel) => { let el = null, m = sel.match(/^#[A-Za-z0-9_-]+/); try { el = document.querySelector(sel.split(' >> ')[0]) || (m && document.querySelector(m[0])); } catch (e) { return false; }
+                  let d = el && el.closest('aside details'), n = false; while (d) { if (!d.open) { d.open = true; n = true; } d = d.parentElement.closest('details'); } return n; }""", sel)
+                if opened:
+                    pg.wait_for_timeout(150)
+            return orig(sel, *args, **kw)
+        setattr(pg, name, f)
+    for name in ("click", "fill", "select_option", "check"):
+        wrap(name)
+
+
 def new_page(ctx, auto=False):
     pg = ctx.new_page()
     pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.on("request", lambda r: requests.append(r.url))
     pg.goto("file://" + os.path.abspath(a.html) + ("?lang=it" if auto else "?offline&lang=it"))     # le prove partono «?offline»: il caricamento automatico dei set da GitHub ha una sezione a parte
+    auto_panel(pg)
+    pg.evaluate("() => { document.getElementById('d-games').open = true; }")     # il pannello «Macchina e giochi» sta nel cassetto: lo apre (sul computer non copre lo schermo)
     return pg
 
 
@@ -70,6 +88,12 @@ def log_text(pg):
 
 def ev(pg, js):
     return pg.evaluate(js)
+
+
+def panel(pg, pid):
+    """Apre un pannello del cassetto (uno solo alla volta: l'evento «toggle» chiude gli altri) e aspetta che l'evento sia passato."""
+    pg.evaluate("(id) => { document.getElementById(id).open = true; }", pid)
+    pg.wait_for_timeout(150)
 
 
 o2zip = os.path.join(tmp, "o2.zip")
@@ -349,6 +373,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(150)
     check(ev(page, "() => window.o2web.app.paused"), "aspetto: console in pausa mentre si legge l'immagine")
     page.click("#d-look summary")
+    page.wait_for_timeout(150)                                   # l'evento «toggle» dei pannelli arriva dopo: un pannello alla volta
     cv = lambda: ev(page, "() => { const c = document.getElementById('screen'); return [c.width, c.height, c.classList.contains('smooth'), parseInt(c.style.width), parseInt(c.style.height)]; }")
     c0 = cv()
     check(c0[:3] == [360, 243, False], "aspetto: di partenza canvas 360 x 243, senza «smooth» (%s)" % c0)
@@ -357,6 +382,8 @@ with sync_playwright() as p:
       for (let i = 0; i < fb.length; i++) { const v = p[fb[i] & 15]; if (d[i * 4] !== (v & 255) || d[i * 4 + 1] !== ((v >>> 8) & 255) || d[i * 4 + 2] !== ((v >>> 16) & 255)) bad++; }
       return bad; }""")
     check(same == 0, "aspetto: con i filtri spenti l'immagine e' esattamente quella del chip (%d pixel diversi)" % same)
+    ev(page, "() => { document.getElementById('d-games').open = true; }")      # un solo pannello alla volta: «Aspetto» ha chiuso «Macchina e giochi»
+    page.wait_for_timeout(150)
     machine0 = ev(page, "() => ({kind: window.o2web.app.machine.kind, cap: document.getElementById('machine-sel').options[document.getElementById('machine-sel').selectedIndex].textContent, vis: getComputedStyle(document.getElementById('machine')).display !== 'none'})")
     check(machine0["kind"] == "g7000" and machine0["vis"] and "Videopac G7000" in machine0["cap"], "macchina automatica con BIOS Videopac/Odyssey e PAL: G7000 (%s)" % machine0["cap"])
     svg0 = ev(page, "() => document.getElementById('machine-img').innerHTML")
@@ -399,6 +426,7 @@ with sync_playwright() as p:
     exp = ev(page, "() => window.o2web.app.machineChoices().filter(c => !c.available).map(c => c.kind).join()")
     check(dis == exp, "macchine senza BIOS: in grigio, non scegliibili (%s)" % dis)
     # insiemi pronti
+    panel(page, "d-look")
     page.select_option("#look-preset", "anni80")
     page.wait_for_timeout(300)
     c1 = cv()
@@ -435,6 +463,7 @@ with sync_playwright() as p:
     c3 = cv()
     check(c3[:3] == [360, 243, False], "«Nessun filtro»: di nuovo 360 x 243 esatti (%s)" % c3)
     # scelta della macchina a mano
+    panel(page, "d-games")
     page.select_option("#machine-sel", "c52")
     page.wait_for_timeout(200)
     check("C52" in page.eval_on_selector("#machine-sel", "e => e.options[e.selectedIndex].textContent") and ev(page, "() => window.o2web.app.machinePref") == "c52" and ev(page, "() => document.getElementById('machine-img').innerHTML") != svg0, "macchina scelta: C52")
@@ -710,14 +739,14 @@ with sync_playwright() as p:
 
     # ordine di «Macchina e giochi»: macchina, elenco dei giochi, punto unico di caricamento, chip di stato, set di caratteri (chiuso)
     pn.evaluate("() => document.getElementById('d-games').open = true")
-    order = pn.evaluate("""() => ['machine-sel', 'q', 'folder', 'games', 'b-add', 'chips', 'd-sets'].map(id => document.getElementById(id).getBoundingClientRect().top)""")
+    order = pn.evaluate("""() => ['machine-sel', 'q', 'folder', 'games', 'drop', 'chips', 'd-sets'].map(id => document.getElementById(id).getBoundingClientRect().top)""")
     check(all(order[i] < order[i + 1] or abs(order[i] - order[i + 1]) < 1 for i in range(len(order) - 1)) and order == sorted(order), "layout: ordine macchina, giochi, caricamento unico, stato, set di caratteri (%s)" % order)
     seq = pn.evaluate("() => [...document.querySelectorAll('#panel > details')].map(d => d.id)")
     check(seq == ["d-games", "d-state", "d-net", "d-look", "d-keys", "d-chars", "d-about"], "layout: pannelli in ordine, editor dei caratteri penultimo (%s)" % seq)
     txt_all = pn.evaluate("() => ['panel', 'splash'].map(i => document.getElementById(i).textContent).join(' ') + document.querySelector('header').textContent + document.querySelector('footer').textContent + document.documentElement.outerHTML.replace(/<script[\\s\\S]*?<\\/script>/g, '')")
     check("tosec" not in txt_all.lower() and pn.locator("#tosec-box, #tosec-links, a.btn").count() == 0, "pagina: nessun riferimento a TOSEC e nessun riquadro dei collegamenti")
     check(pn.locator("#plate").count() == 1 and pn.locator("#screenopts").count() == 1 and pn.evaluate("() => { const a = document.getElementById('screen').getBoundingClientRect().bottom, b = document.getElementById('plate').getBoundingClientRect(), c = document.getElementById('screenopts').getBoundingClientRect(); return a <= b.top && b.bottom <= c.top; }"), "layout: sotto lo schermo prima la piastra dei tasti, poi «Schermo e suono»")
-    check(pn.locator("#d-games input[type=file]").count() == 1 and pn.locator("input[type=file]").count() == 1, "layout: un solo punto di caricamento in tutta la pagina (%d campi file)" % pn.locator("input[type=file]").count())
+    check(pn.locator("header input[type=file]").count() == 1 and pn.locator("input[type=file]").count() == 1, "layout: un solo campo di caricamento, nella barra in alto di caricamento in tutta la pagina (%d campi file)" % pn.locator("input[type=file]").count())
     for gone in ["b-char", "b-efchar", "b-load", "b-sess-open", "b-covers", "b-covers-dir", "ce-open", "net-sugg"]:
         check(pn.locator("#" + gone).count() == 0, "layout: tolto il pulsante ridondante #" + gone)
 
@@ -746,11 +775,12 @@ with sync_playwright() as p:
     pn.keyboard.press("Space")
     check(not pn.is_visible("#h-drop"), "aiuto: Spazio sul pulsante lo richiude")
     check(not hits and not any("archive.org" in u for u in requests), "aiuto: aprire e chiudere gli aiuti non fa nessuna richiesta di rete")
-    # ogni «?» dei pannelli apre e chiude il suo riquadro (si aprono prima tutti i pannelli)
-    pn.evaluate("() => document.querySelectorAll('aside details').forEach(d => { d.open = true; })")
+    # ogni «?» dei pannelli apre e chiude il suo riquadro (si apre prima il pannello che lo contiene)
     bad_h = []
     for h in hb:
         if h[0] == "h-pinb": continue                              # visibile solo con il G7400 (provato nella sezione G7400)
+        pn.evaluate("(id) => { let d = document.querySelector('[aria-controls=' + id + ']').closest('details'); while (d) { d.open = true; d = d.parentElement.closest('details'); } }", h[0])     # un pannello alla volta: apre quello del «?»
+        pn.wait_for_timeout(150)
         sel_b = "[aria-controls=%s]" % h[0]
         pn.click(sel_b)
         if not (pn.is_visible("#" + h[0]) and pn.get_attribute(sel_b, "aria-expanded") == "true"): bad_h.append(h[0] + ":apre")
@@ -937,6 +967,7 @@ with sync_playwright() as p:
     pn.evaluate("() => window.o2web.app.start(window.o2web.app.lib.games.find(g => /killer/i.test(g.title)).id)")
     pn.wait_for_function("() => document.getElementById('cover').style.display !== 'none'", timeout=8000)
     pn.wait_for_function("() => { const i = document.getElementById('cover-img'); return i.complete && i.naturalWidth === 40; }", timeout=8000)
+    panel(pn, "d-games")
     check("Killer" in pn.inner_text("#cover-cap"), "copertina del gioco in uso mostrata (%s)" % pn.inner_text("#cover-cap"))
     pn.screenshot(path=os.path.join(a.outdir, "6_rete_copertine.png"))
 
@@ -967,6 +998,7 @@ with sync_playwright() as p:
     pe.wait_for_timeout(1500)
     check(ev(pe, "() => window.o2web.app.running"), "editor: partita in corso")
     pe.click("#d-chars > summary")
+    pe.wait_for_timeout(150)
     check(pe.is_visible("#ce-grid") and pe.is_visible("#ce-pix"), "editor: griglia e disegno visibili")
     check("set GPL" in pe.inner_text("#ce-info") and ev(pe, "() => window.o2web.app.charset") is None, "editor: parte dal set GPL incluso (%s)" % pe.inner_text("#ce-info")[:60])
     check(ev(pe, "() => window.o2web.charui.state.data.vdc.length") == 512, "editor: 512 byte del chip video")
@@ -1132,6 +1164,7 @@ with sync_playwright() as p:
 
     # ---- la regola di sicurezza (CSP) impedisce davvero le richieste di rete: pagina a parte, i suoi errori di console sono attesi
     pgc = ctx.new_page()
+    auto_panel(pgc)
     pgc.goto("file://" + os.path.abspath(a.html) + "?offline&lang=it")
     blocked = pgc.evaluate("""() => new Promise((res) => {
       document.addEventListener('securitypolicyviolation', (e) => res(e.violatedDirective));
@@ -1177,6 +1210,7 @@ with sync_playwright() as p:
                           body=cset_src if route.request.url.endswith("/cset.c") else "niente di utile qui")
     ctx2.route("https://raw.githubusercontent.com/**", gh2_route)
     pa = ctx2.new_page()
+    auto_panel(pa)
     pa.on("console", lambda m: errors.append(m.text) if m.type == "error" and "Failed to load resource" not in m.text else None)
     pa.on("pageerror", lambda e: errors.append(str(e)))
     pa.goto("file://" + os.path.abspath(a.html) + "?lang=it")
@@ -1202,6 +1236,7 @@ with sync_playwright() as p:
     # senza rete: un solo tentativo, poi il GPL con un avviso; la pagina funziona
     gh_calls.clear(); gh_mode2["m"] = "down"
     pb = ctx2.new_page()
+    auto_panel(pb)
     pb.on("pageerror", lambda e: errors.append(str(e)))
     pb.goto("file://" + os.path.abspath(a.html) + "?lang=it")
     pb.wait_for_function("() => /uso il set GPL incluso/.test(document.getElementById('log').textContent)", timeout=8000)
@@ -1216,6 +1251,7 @@ with sync_playwright() as p:
     # «?offline»: nessuna richiesta
     gh_calls.clear(); gh_mode2["m"] = "ok"
     pc2 = ctx2.new_page()
+    auto_panel(pc2)
     pc2.goto("file://" + os.path.abspath(a.html) + "?offline&lang=it")
     pc2.wait_for_timeout(1500)
     check(not gh_calls and ev(pc2, "() => window.o2web.AUTO_CHARSETS") is False and ev(pc2, "() => window.o2web.app.charset") is None, "«?offline»: nessuna richiesta di rete, set GPL")

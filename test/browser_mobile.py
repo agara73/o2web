@@ -95,7 +95,13 @@ class Fingers:
 def choose(pg, sel, value):
     """scelta in un menu del pannello «Tasti, joystick e gamepad» (lo si apre prima, come farebbe una persona)"""
     pg.evaluate("() => { document.getElementById('d-keys').open = true; }")
+    pg.wait_for_timeout(300)
+    if not pg.evaluate("() => document.body.classList.contains('menu-open')"):     # il pannello era gia' aperto, ma il cassetto chiuso
+        pg.click("#b-menu")
+        pg.wait_for_timeout(300)
     pg.select_option(sel, value)
+    pg.click("#b-menu")                                       # chiude il cassetto: sul telefono copre lo schermo
+    pg.wait_for_timeout(300)
 
 
 with sync_playwright() as p:
@@ -106,6 +112,27 @@ with sync_playwright() as p:
     check(pg.evaluate("() => matchMedia('(pointer: coarse)').matches"), "il browser di prova si presenta come schermo tattile (pointer: coarse)")
     check(pg.evaluate("() => document.body.classList.contains('touch-on')") and visible(pg, "#tpad"), "verticale: i comandi a tocco compaiono da soli")
     check(pg.input_value("#tmode") == "auto" and pg.input_value("#tstick") == "cross", "scelte all'apertura: comandi automatici, croce fissa")
+
+    # ---- cassetto dei pannelli (tappa 8b): barra in alto, un pannello alla volta
+    bar = pg.evaluate("() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); return {menu: r('b-menu'), add: r('b-add'), iw: innerWidth}; }")
+    check(bar["menu"]["top"] < 80 and bar["add"]["top"] < 80 and bar["menu"]["width"] >= 40 and bar["add"]["right"] <= bar["iw"], "barra: menu e «Aggiungi file…» in alto, sempre in vista (%s)" % {k: round(v["top"]) for k, v in bar.items() if k != "iw"})
+    closed = pg.evaluate("() => ({inert: document.getElementById('panel').inert, left: document.getElementById('panel').getBoundingClientRect().right, shade: document.getElementById('shade').hidden})")
+    check(closed["inert"] and closed["left"] <= 0 and closed["shade"], "cassetto chiuso: fuori schermo, non raggiungibile, nessuna ombra (%s)" % closed)
+    pg.tap("#b-menu")
+    pg.wait_for_timeout(300)
+    opened = pg.evaluate("() => ({open: document.querySelectorAll('#panel > details[open]').length, id: (document.querySelector('#panel > details[open]') || {}).id, left: document.getElementById('panel').getBoundingClientRect().left, w: document.getElementById('panel').getBoundingClientRect().width, iw: innerWidth, shade: !document.getElementById('shade').hidden, exp: document.getElementById('b-menu').getAttribute('aria-expanded')})")
+    check(opened["open"] == 1 and opened["id"] == "d-games" and opened["left"] == 0 and opened["w"] <= opened["iw"] * 0.9 and opened["shade"] and opened["exp"] == "true", "menu: si apre il cassetto con «Macchina e giochi», ombra sul resto (%s)" % opened)
+    pg.tap("#d-look > summary")
+    pg.wait_for_timeout(300)
+    check(pg.evaluate("() => [...document.querySelectorAll('#panel > details[open]')].map(d => d.id).join()") == "d-look", "un solo pannello alla volta: aprendo «Aspetto» si chiude «Macchina e giochi»")
+    pg.keyboard.press("Escape")
+    pg.wait_for_timeout(300)
+    check(pg.evaluate("() => document.getElementById('panel').inert && document.getElementById('shade').hidden && document.getElementById('b-menu').getAttribute('aria-expanded') === 'false'"), "Esc chiude il cassetto")
+    pg.tap("#b-menu")
+    pg.wait_for_timeout(300)
+    pg.tap("#shade", position={"x": 400, "y": 300})
+    pg.wait_for_timeout(300)
+    check(pg.evaluate("() => document.getElementById('panel').inert"), "un tocco sull'ombra chiude il cassetto")
     st, tp, td, tf = box(pg, "#stage"), box(pg, "#tpad"), box(pg, "#tdir"), box(pg, "#tfire")
     check(tp["y"] >= st["b"] - 1, "verticale: i comandi stanno sotto lo schermo (%.0f >= %.0f)" % (tp["y"], st["b"]))
     check(td["r"] <= tf["x"] and td["x"] >= 0 and tf["r"] <= 412, "verticale: croce a sinistra, fuoco a destra, dentro lo schermo del telefono")

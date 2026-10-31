@@ -42,6 +42,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.on("request", lambda r: requests.append(r.url))
     pg.goto("file://" + os.path.abspath(a.html) + "?offline&lang=en")
+    pg.evaluate("() => { document.getElementById('d-games').open = true; }")
 
     # ---- posto e etichette
     inside = pg.evaluate("() => ['b-swap', 'b-crt'].map(id => !!document.querySelector('#plate #' + id))")
@@ -131,6 +132,7 @@ with sync_playwright() as p:
 
     # ---- italiano
     pg.goto("file://" + os.path.abspath(a.html) + "?offline&lang=it")
+    pg.evaluate("() => { document.getElementById('d-games').open = true; }")
     legs = pg.evaluate("() => [...document.querySelectorAll('#plate .pgrp > .leg')].map(l => l.textContent)")
     check(legs == ["Gioco", "Stato", "Giocatori", "Schermo", "Reset"], "gruppi della barra (italiano): %s" % legs)
     check(pg.inner_text("#b-swap .kl") == "Scambia comandi 1-2" and pg.inner_text("#b-swap .ks") == "normali", "italiano: «Scambia comandi 1-2» / «normali»")
